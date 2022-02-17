@@ -1,13 +1,6 @@
-#!/usr/bin/python3
-
 from megatable import MegaTable
 import ucd
-
-def prepend_x(value):
-    if not isinstance(value, str):
-        raise TypeError("expected string, got " + str(type(value)) + " (" + str(value) + ")")
-    return "X::" + value
-
+import table_helper
 
 def get_general_categories():
     DEFAULT_CATEGORY = 'Cn'
@@ -24,7 +17,7 @@ def get_general_categories():
             namespace_preamble = "using X = Unicode::GeneralCategory;",
             global_postamble = special_function,
             out_of_bounds_value = "X::Cn",
-            value_print_converter = prepend_x,
+            value_print_converter = table_helper.prepend_x,
             sizeof_chunk_elem = 1)
 
     prior_codepoint = 0
