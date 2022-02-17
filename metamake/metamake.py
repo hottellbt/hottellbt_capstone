@@ -297,7 +297,7 @@ class CxxProject:
             makefile.add_rule(
                     obj,
                     prerequisites=inclusions,
-                    recipe=f"{cxx_compile} -o {obj} -c {sf}")
+                    recipe=f"mkdir -p {os.path.dirname(obj)} && {cxx_compile} -o {obj} -c {sf}")
 
         if self.has_any_cxxtest_suites():
 
@@ -305,11 +305,12 @@ class CxxProject:
             suites = [x for x in self.gen_cxxtest_suites()]
             runner_name = os.path.join(self.bin_dir, self.name + "_test_runner.cpp")
             runner_obj = runner_name + ".o"
+            runner_obj_dir = os.path.dirname(runner_obj)
 
             makefile.add_rule(
                     runner_name,
                     suites,
-                    f'cxxtestgen --error-printer --have-eh -o {runner_name} {" ".join(suites)}')
+                    f'mkdir -p {runner_obj_dir} && cxxtestgen --error-printer --have-eh -o {runner_name} {" ".join(suites)}')
 
             makefile.add_rule(
                     runner_obj,
