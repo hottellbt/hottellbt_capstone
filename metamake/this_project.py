@@ -1,5 +1,5 @@
 import os
-from metamake import CxxProject
+from metamake import CxxProject, flatten
 
 def get_unicode_lib(makefile, home, bin_dir):
     src = os.path.join(home, "src")
@@ -20,48 +20,62 @@ def get_unicode_lib(makefile, home, bin_dir):
             "test_codepoint_to_string.hpp",
             "test_utf8.hpp")
 
-    def add_codegen(generator, result):
+    def add_codegen(generator, result, ucd_files):
         nonlocal makefile
 
         UCD_DIR = os.path.join(home, "ucd")
 
+        ucd_files_full = [os.path.join(UCD_DIR, x) for x in ucd_files]
+
         makefile.add_prerequisites(
                 result,
-                [generator, 
-                    os.path.join(codegen, "ucd.py"),
-                    os.path.join(codegen, "megatable.py")])
+                flatten(
+                    [generator,
+                        os.path.join(codegen, "ucd.py"),
+                        os.path.join(codegen, "megatable.py")],
+                    ucd_files_full))
 
         makefile.set_recipe(
                 result,
                 f'UCD_DIR="{UCD_DIR}" python3 {generator} > {result}')
 
-    def add_codegen_src(name):
+
+        for ucd_file in ucd_files:
+            
+            ucd_file_full = os.path.join(UCD_DIR, ucd_file)
+            ucd_file_dir = os.path.dirname(ucd_file_full)
+
+            makefile.set_recipe(
+                    ucd_file_full,
+                    f"mkdir -p '{ucd_file_dir}' && cd '{ucd_file_dir}' && wget 'https://www.unicode.org/Public/UCD/latest/ucd/{ucd_file}'")
+
+    def add_codegen_src(name, ucd_files):
         nonlocal l, add_codegen, codegen, src
         generator = os.path.join(codegen, f"gen_{name}.py")
         result = os.path.join(src, f"auto_{name}.cpp")
-        add_codegen(generator, result)
+        add_codegen(generator, result, ucd_files)
         l.add_source_file(result, headers=[os.path.join(include, "unicode.hpp")])
 
-    add_codegen_src("general_category")
-    add_codegen_src("hangul_syllable_type")
-    add_codegen_src("indic_syllabic_category")
-    add_codegen_src("line_break_property")
-    add_codegen_src("script")
-    add_codegen_src("simple_property")
+    add_codegen_src("general_category",        ["UnicodeData.txt"                     ])
+    add_codegen_src("hangul_syllable_type",    ["HangulSyllableType.txt"              ])
+    add_codegen_src("indic_syllabic_category", ["IndicSyllabicCategory.txt"           ])
+    add_codegen_src("line_break_property",     ["LineBreak.txt"                       ])
+    add_codegen_src("script",                  ["Scripts.txt"                         ])
+    add_codegen_src("simple_property",         ["PropList.txt", "emoji/emoji-data.txt"])
 
-    def add_codegen_test(name):
+    def add_codegen_test(name, ucd_files):
         nonlocal l, add_codegen, codegen, test
         generator = os.path.join(codegen, f"gen_test_{name}.py")
         result = os.path.join(test, f"auto_test_{name}.hpp")
-        add_codegen(generator, result)
+        add_codegen(generator, result, ucd_files)
         l.add_cxxtest_suite(result)
 
-    add_codegen_test("grapheme_cluster_break_property")
-    add_codegen_test("hangul_syllable_type")
-    add_codegen_test("indic_syllabic_category")
-    add_codegen_test("line_break_property")
-    add_codegen_test("sentence_break_property")
-    add_codegen_test("simple_property")
+    add_codegen_test("grapheme_cluster_break_property", ["auxiliary/GraphemeBreakProperty.txt" ])
+    add_codegen_test("hangul_syllable_type",            ["HangulSyllableType.txt"              ])
+    add_codegen_test("indic_syllabic_category",         ["IndicSyllabicCategory.txt"           ])
+    add_codegen_test("line_break_property",             ["LineBreak.txt"                       ])
+    add_codegen_test("sentence_break_property",         ["auxiliary/SentenceBreakProperty.txt" ])
+    add_codegen_test("simple_property",                 ["PropList.txt", "emoji/emoji-data.txt"])
 
     return l
 

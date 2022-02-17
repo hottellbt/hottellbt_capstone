@@ -31,8 +31,10 @@ class Rule:
         self.prerequisites.add(prerequisite)
 
     def set_recipe(self, recipe):
+        if self.recipe == recipe:
+            return
         if self.recipe is not None:
-            raise RuntimeError("Recipe already set")
+            raise RuntimeError("Recipe already set to something else")
         self.recipe = recipe
 
     def set_phony(self, phony=True):
