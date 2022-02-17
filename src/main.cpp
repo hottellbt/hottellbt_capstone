@@ -18,8 +18,10 @@ int main() {
 	term.reset();
 
 	term.set_underline();
-	term.print(UTF8::decode("Hello, world!\n"));
+	term.print(UTF8::decode("Hello, world!"));
 	term.reset();
+
+	term.print(UTF8::decode("\n"));
 
 
 	for (int i = 0; i <= 255; i++) {
