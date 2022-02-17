@@ -1,0 +1,3 @@
+ucd
+src/auto*.cpp
+test/auto*.hpp
