@@ -2,7 +2,7 @@
 
 #include "unicode.hpp"
 #include "ansi_terminal.hpp"
-#include "highlight.hpp"
+#include "highlighting.hpp"
 
 using Terminal::AbstractTerminal;
 
@@ -12,7 +12,7 @@ int main() {
 	auto hello = UTF8::decode("Hello, world!");
 	auto endl = UTF8::decode("\n");
 
-	Highlight::Highlight hi ("red", "green");
+	Highlighting::Highlight hi ("red", "green");
 	hi.apply_to_terminal(&term);
 
 	term.print(hello);

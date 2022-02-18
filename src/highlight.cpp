@@ -1,7 +1,6 @@
-#include "highlight.hpp"
+#include "highlighting.hpp"
 #include "terminal.hpp"
 
-#include <iostream>
 #include <cstdint>
 #include <map>
 
@@ -30,9 +29,9 @@ std::map<const std::string, const uint8_t> aliases {
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Highlight::HighlightColor> Highlight::color_from_string(const std::string &str) {
+std::optional<Highlighting::Color> Highlighting::color_from_string(const std::string &str) {
 	auto lookup = aliases.find(str);
-	if (lookup != aliases.end()) { return HighlightColor(lookup->second); }
+	if (lookup != aliases.end()) { return Color(lookup->second); }
 
 	return std::nullopt;
 }

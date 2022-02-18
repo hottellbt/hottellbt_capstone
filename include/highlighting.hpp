@@ -1,12 +1,12 @@
-#ifndef INCLUDED_HIGHLIGHT_HPP
-#define INCLUDED_HIGHLIGHT_HPP
+#ifndef INCLUDED_HIGHLIGHTING_HPP
+#define INCLUDED_HIGHLIGHTING_HPP
 
 #include "terminal.hpp"
 
 #include <cstdint>
 #include <optional>
 
-namespace Highlight {
+namespace Highlighting {
 
 	enum class ColorType : uint8_t {
 		USE_DEFAULT,
@@ -14,15 +14,15 @@ namespace Highlight {
 		COLOR_RGB
 	};
 
-	class HighlightColor {
+	class Color {
 		public:
-			HighlightColor() :
+			Color() :
 				color_type(ColorType::USE_DEFAULT) {}
 
-			HighlightColor(uint8_t color_256) :
+			Color(uint8_t color_256) :
 				color_type(ColorType::COLOR_256), color_256(color_256) {}
 
-			HighlightColor(uint8_t r, uint8_t g, uint8_t b) :
+			Color(uint8_t r, uint8_t g, uint8_t b) :
 				color_type(ColorType::COLOR_RGB),
 				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
 
@@ -62,7 +62,7 @@ namespace Highlight {
 			uint8_t color_rgb_b;
 	};
 
-	std::optional<HighlightColor> color_from_string(const std::string &str);
+	std::optional<Color> color_from_string(const std::string &str);
 
 	class Highlight {
 		public:
@@ -74,8 +74,8 @@ namespace Highlight {
 				fg(color_from_string(fg_str)), bg(color_from_string(bg_str)) {}
 			
 			Highlight(
-					const std::optional<HighlightColor> &fg,
-					const std::optional<HighlightColor> &bg) :
+					const std::optional<Color> &fg,
+					const std::optional<Color> &bg) :
 				fg(fg), bg(bg) {}
 
 			void apply_to_terminal(Terminal::AbstractTerminal *term) const {
@@ -89,8 +89,8 @@ namespace Highlight {
 			}
 
 		private:
-			std::optional<HighlightColor> fg;
-			std::optional<HighlightColor> bg;
+			std::optional<Color> fg;
+			std::optional<Color> bg;
 	};
 };
 
