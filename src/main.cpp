@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "unicode.hpp"
 #include "ansi_terminal.hpp"
 #include "highlighting.hpp"
@@ -14,7 +12,30 @@ int main() {
 
 	Highlighting::Highlight hi ("red", "green");
 	hi.apply_to_terminal(&term);
+	term.print(hello);
+	term.reset();
+	term.print(endl);
 
+	hi = {"0", "1"};
+	hi.apply_to_terminal(&term);
+	term.print(hello);
+	term.reset();
+	term.print(endl);
+
+	hi = {"70", "19"};
+	hi.apply_to_terminal(&term);
+	term.print(hello);
+	term.reset();
+	term.print(endl);
+
+	hi = {"1dd5f2", "None"};
+	hi.apply_to_terminal(&term);
+	term.print(hello);
+	term.reset();
+	term.print(endl);
+
+	hi = {"f2dc1d", "f2721d"};
+	hi.apply_to_terminal(&term);
 	term.print(hello);
 	term.reset();
 	term.print(endl);
