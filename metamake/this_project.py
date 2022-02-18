@@ -92,6 +92,7 @@ def get_main_project(makefile, home, bin_dir):
     proj.add_include_dir(include)
 
     proj.add_source_file(os.path.join(src, "main.cpp"))
+    proj.add_source_file(os.path.join(src, "highlight.cpp"))
 
     proj.configure(makefile)
 

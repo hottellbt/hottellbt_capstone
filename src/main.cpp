@@ -12,10 +12,11 @@ int main() {
 	auto hello = UTF8::decode("Hello, world!");
 	auto endl = UTF8::decode("\n");
 
-	Highlight::Highlight hi (0, 0);
+	Highlight::Highlight hi ("red", "green");
 	hi.apply_to_terminal(&term);
 
 	term.print(hello);
+	term.reset();
 	term.print(endl);
 
 	term.reset();

@@ -53,7 +53,6 @@ def find_included_files(file_path, include_dirs):
                 break
 
         if not found_one:
-            eprint(f"Failed to find the included file '{quoted_include}' for {file_path}")
-            raise RuntimeError()
+            raise RuntimeError(f"Failed to find the included file '{quoted_include}' for {file_path}")
 
     return ret
