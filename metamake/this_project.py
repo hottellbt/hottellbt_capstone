@@ -1,7 +1,7 @@
 import os
 from metamake import CxxProject, flatten
 
-def get_unicode_lib(makefile, home, bin_dir):
+def get_lib_unicode(makefile, home, bin_dir):
     src = os.path.join(home, "src")
     test = os.path.join(home, "test")
     codegen = os.path.join(home, "codegen")
@@ -11,14 +11,12 @@ def get_unicode_lib(makefile, home, bin_dir):
 
     l.add_include_dir(home, "include")
 
-    l.add_source_file(os.path.join(src, "utf8.cpp"))
     l.add_source_file(os.path.join(src, "unicode.cpp"))
 
     # Manual tests
     l.add_cxxtest_suite_dir(
             test,
-            "test_codepoint_to_string.hpp",
-            "test_utf8.hpp")
+            "test_codepoint_to_string.hpp")
 
     def add_codegen(generator, result, ucd_files):
         nonlocal makefile
@@ -80,23 +78,38 @@ def get_unicode_lib(makefile, home, bin_dir):
     return l
 
 
-def get_main_project(makefile, home, bin_dir):
-    unicode_lib = get_unicode_lib(makefile, os.path.join(home, "unicode_lib"), bin_dir)
+def get_lib_capstone(makefile, home, bin_dir,
+        lib_unicode):
+
+    lib = CxxProject("lib_capstone", bin_dir, executable=True)
+    lib.add_subproject(lib_unicode)
+
+    lib.add_include_dir(os.path.join(home, "include"))
 
     src = os.path.join(home, "src")
-    include = os.path.join(home,  "include")
-
-    proj = CxxProject("hottellbt_capstone", bin_dir, executable=True)
-    proj.add_subproject(unicode_lib)
-
-    proj.add_include_dir(include)
+    test = os.path.join(home,  "test")
 
     for name in [
-            "main",
-            "ansi_terminal"]:
-        proj.add_source_file(os.path.join(src, f"{name}.cpp"))
+            "ansi_terminal",
+            "utf8"]:
+        lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
-    proj.configure(makefile)
+    for name in [
+            "utf8"]:
+        lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
+
+    return lib
+
+
+def get_main_project(makefile, home, bin_dir):
+    lib_unicode = get_lib_unicode(makefile, os.path.join(home, "unicode_lib"), bin_dir)
+    lib_capstone = get_lib_capstone(makefile, os.path.join(home, "lib_capstone"), bin_dir, lib_unicode)
+
+    proj = CxxProject("hottellbt_capstone", bin_dir, executable=True)
+    proj.add_subproject(lib_unicode)
+    proj.add_subproject(lib_capstone)
+
+    proj.add_source_file(os.path.join(home, "src", "main.cpp"))
 
     return proj
 

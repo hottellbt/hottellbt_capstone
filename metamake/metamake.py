@@ -263,11 +263,18 @@ class CxxProject:
             yield self._src2obj(source_file)
 
     def gen_linked_objects(self):
+        already = set()
+
         for x in self.get_project_objects():
-            yield x
+            if not x in already:
+                yield x
+                already.add(x)
+
         for dep in self.subprojects:
             for obj in dep.gen_linked_objects():
-                yield obj
+                if not obj in already:
+                    yield obj
+                    already.add(obj)
 
     def get_inclusions(self, source_file):
         ret = set()
