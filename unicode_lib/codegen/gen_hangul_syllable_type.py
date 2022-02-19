@@ -1,13 +1,6 @@
-#!/usr/bin/python3
-
 from megatable import MegaTable
 import ucd
-
-def prepend_x(value):
-    if not isinstance(value, str):
-        raise TypeError("expected string, got " + str(type(value)) + " (" + str(value) + ")")
-    return "X::" + value
-
+import table_helper
 
 def get_hangul_syllable_types():
     special_function ="""Unicode::HangulSyllableType Unicode::get_hangul_syllable_type(Unicode::codepoint_t codepoint) {
@@ -21,7 +14,7 @@ return HangulSyllableTypeData::lookup(codepoint);
             namespace_preamble = "using X = Unicode::HangulSyllableType;",
             global_postamble = special_function,
             out_of_bounds_value = "X::NA",
-            value_print_converter = prepend_x,
+            value_print_converter = table_helper.prepend_x,
             sizeof_chunk_elem = 1)
 
     for parts in ucd.preprocess_parts('HangulSyllableType.txt'):
