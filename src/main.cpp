@@ -13,17 +13,36 @@ int main() {
 	bool running = true;
 
 	while (running) {
+
 		Terminal::next_event(event);
-		Terminal::print_raw(std::to_string((uint8_t) event.type));
-		Terminal::print_raw(' ');
-		Terminal::flush();
 
 		switch (event.type) {
+
 			case Terminal::EventType::EXIT:
+				Terminal::print(UTF8::decode("Exit\n\r"));
 				running = false;
 				break;
-			case Terminal::EventType::KEY:
-				running = event.key_event.codepoint != 'q';
+
+			case Terminal::EventType::RESIZE:
+				Terminal::print(UTF8::decode("Resize: rows="));
+				Terminal::print_raw(std::to_string(event.e_resize.rows));
+				Terminal::print(UTF8::decode(", cols="));
+				Terminal::print_raw(std::to_string(event.e_resize.cols));
+				Terminal::print_raw("\n\r");
+				break;
+
+			case Terminal::EventType::TEXT:
+				Terminal::print(UTF8::decode("Text: "));
+
+				for (auto cp : event.e_text.text) {
+					if (cp == 'q') {
+						running = false;
+					}
+				}
+
+				Terminal::print(event.e_text.text);
+
+				Terminal::print_raw("\n\r");
 				break;
 		}
 	}

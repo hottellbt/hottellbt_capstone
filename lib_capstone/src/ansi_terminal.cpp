@@ -21,6 +21,9 @@ tcflag_t nonraw_c_cflag;
 sig_atomic_t got_sigwinch = 0;
 sig_atomic_t got_sigint = 0;
 
+constexpr size_t read_buffer_len = 1028;
+char read_buffer[read_buffer_len];
+
 void signal_handler(int signal) {
 	switch (signal) {
 		case SIGWINCH:
@@ -36,15 +39,18 @@ void signal_handler(int signal) {
 void Terminal::next_event(Terminal::Event &event) {
 	using Terminal::EventType;
 
-	int bytes_read;
-	constexpr int buffer_len = 1;
-	char buffer[buffer_len];
+	UTF8::BufferedDecoder decoder;
 
-	bytes_read = read(0, buffer, buffer_len);
+	int bytes_read;
+
+	bytes_read = read(0, read_buffer, read_buffer_len);
 	if (bytes_read > 0) {
-		event.type = EventType::KEY;
-		event.key_event.codepoint = buffer[0];
-		return;
+		auto decoded = decoder.decode(read_buffer, bytes_read);
+		if (decoded.size() > 0) {
+			event.type = EventType::TEXT;
+			event.e_text.text = decoded;
+			return;
+		}
 	}
 
 	if (got_sigwinch == 1) {
@@ -53,8 +59,8 @@ void Terminal::next_event(Terminal::Event &event) {
 		ioctl(0, TIOCGWINSZ, &window_size);
 
 		event.type = EventType::RESIZE;
-		event.resize_event.rows = window_size.ws_row;
-		event.resize_event.cols = window_size.ws_col;
+		event.e_resize.rows = window_size.ws_row;
+		event.e_resize.cols = window_size.ws_col;
 		return;
 	}
 

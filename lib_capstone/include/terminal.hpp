@@ -29,14 +29,14 @@ namespace Terminal {
 	};
 
 	enum class EventType : uint8_t {
-		NONE, // timeout waiting for next event, nothing happened, etc
-		EXIT,     // user requested to exit/terminate
-		KEY,
-		RESIZE,
+		NONE,   // timeout waiting for next event, nothing happened, etc
+		EXIT,   // user requested to exit/terminate gracefully
+		TEXT,   // user typed things, and that input is ready to be processed
+		RESIZE, // SIGWINCH, terminal resized
 	};
 
-	struct EventKey {
-		Unicode::codepoint_t codepoint;
+	struct EventText {
+		Unicode::string_t text {};
 	};
 
 	struct EventResize {
@@ -46,10 +46,10 @@ namespace Terminal {
 
 	struct Event {
 		EventType type = EventType::NONE;
-		union {
-			EventKey key_event;
-			EventResize resize_event;
-		};
+
+		// could not make a union because nontrivial
+		EventText   e_text;
+		EventResize e_resize;
 	};
 
 	void clear();
