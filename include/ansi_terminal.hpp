@@ -18,10 +18,6 @@ class ANSITerminal : public Terminal::AbstractTerminal {
 		void print_raw(const char* str)        { std::cout << str; }
 		void print_raw(char c)                 { std::cout << c; }
 
-		void reset() override {
-			this->print_raw("\x1b[0m");
-		}
-
 		void clear() override {
 			print_raw("\x1b[2J");
 		}
@@ -90,6 +86,12 @@ class ANSITerminal : public Terminal::AbstractTerminal {
 			print_decimal(col);
 			print_raw("mh");
 		}
+
+		void set_raw();
+
+		void next_event(Terminal::Event &event);
+
+		void flush();
 
 	private:
 		const std::function<std::string(Unicode::string_t)> encoder;

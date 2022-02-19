@@ -28,11 +28,34 @@ namespace Terminal {
 		constexpr uint8_t BRIGHT_WHITE   = 15;
 	};
 
+	enum class EventType : uint8_t {
+		NONE = 0,
+		EXIT, // user requested to exit/terminate
+		KEY,
+		RESIZE,
+	};
+
+	struct EventKey {
+		Unicode::codepoint_t codepoint;
+	};
+
+	struct EventResize {
+		unsigned int rows;
+		unsigned int cols;
+	};
+
+	struct Event {
+		EventType type = EventType::NONE;
+		union {
+			EventKey key_event;
+			EventResize resize_event;
+		};
+	};
+
 	class AbstractTerminal {
 		public:
 			AbstractTerminal() {}
 
-			virtual void reset() = 0;
 			virtual void clear() = 0;
 
 			virtual void print(Unicode::string_t) = 0;
@@ -75,6 +98,12 @@ namespace Terminal {
 			virtual void unset_strike()    = 0;
 
 			virtual void move_cursor(int row, int col) = 0;
+
+			virtual void set_raw() = 0;
+
+			virtual void next_event(Event &event) = 0;
+
+			virtual void flush() = 0;
 	};
 };
 

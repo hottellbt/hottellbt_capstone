@@ -7,44 +7,25 @@
 
 int main() {
 	ANSITerminal term;
+	term.set_raw();
 
-	term.set_bold();
-	term.set_italic();
-	term.print(UTF8::decode("Hello, world!\n"));
-	term.reset();
+	Terminal::Event event;
 
-	term.set_bold();
-	term.print(UTF8::decode("Hello, world!\n"));
-	term.reset();
+	bool running = true;
 
-	term.set_underline();
-	term.print(UTF8::decode("Hello, world!"));
-	term.reset();
-
-	term.print(UTF8::decode("\n"));
-
-
-	for (int i = 0; i <= 255; i++) {
-		uint8_t i2 = (uint8_t) i;
-
-		term.set_fg(i2);
-
-		const std::string number = std::to_string(i2);
-
-		if (number.size() < 3) { term.print_raw(' '); }
-		if (number.size() < 2) { term.print_raw(' '); }
-
-		term.print_raw(number);
+	while (running) {
+		term.next_event(event);
+		term.print_raw(std::to_string((uint8_t) event.type));
 		term.print_raw(' ');
+		term.flush();
 
-		if ((i + 1) % 10 == 0) {
-			term.print_raw('\n');
+		switch (event.type) {
+			case Terminal::EventType::EXIT:
+				running = false;
+				break;
 		}
 	}
 
-	term.print_raw('\n');
-
-	term.reset();
 	return 0;
 }
 
