@@ -29,8 +29,8 @@ namespace Terminal {
 	};
 
 	enum class EventType : uint8_t {
-		NONE = 0,
-		EXIT, // user requested to exit/terminate
+		NONE, // timeout waiting for next event, nothing happened, etc
+		EXIT,     // user requested to exit/terminate
 		KEY,
 		RESIZE,
 	};
@@ -52,59 +52,54 @@ namespace Terminal {
 		};
 	};
 
-	class AbstractTerminal {
-		public:
-			AbstractTerminal() {}
+	void clear();
 
-			virtual void clear() = 0;
+	void print(Unicode::string_t);
 
-			virtual void print(Unicode::string_t) = 0;
+	inline void print(Unicode::codepoint_t cp) {
+		Unicode::string_t s;
+		s.push_back(cp);
+		print(s);
+	}
 
-			virtual void print(Unicode::codepoint_t cp) {
-				Unicode::string_t s;
-				s.push_back(cp);
-				this->print(s);
-			}
+	void print_raw(const std::string &str);
+	void print_raw(const char* str);
+	void print_raw(char c);
 
-			virtual void print_raw(const std::string &str) = 0;
-			virtual void print_raw(const char* str) = 0;
-			virtual void print_raw(char c) = 0;
+	void set_fg(uint8_t color_16);
+	void set_bg(uint8_t color_16);
 
-			virtual void set_fg(uint8_t color_16) = 0;
-			virtual void set_bg(uint8_t color_16) = 0;
+	void set_fg(uint8_t r, uint8_t g, uint8_t b);
+	void set_bg(uint8_t r, uint8_t g, uint8_t b);
 
-			virtual void set_fg(uint8_t r, uint8_t g, uint8_t b) = 0;
-			virtual void set_bg(uint8_t r, uint8_t g, uint8_t b) = 0;
+	void unset_fg();
+	void unset_bg();
+	void unset_bg_fg();
 
-			virtual void unset_fg() = 0;
-			virtual void unset_bg() = 0;
-			virtual void unset_bg_fg() = 0;
+	void set_bold();
+	void set_faint();
+	void set_italic();
+	void set_underline();
+	void set_blink();
+	void set_invert();
+	void set_strike();
 
-			virtual void set_bold()        = 0;
-			virtual void set_faint()       = 0;
-			virtual void set_italic()      = 0;
-			virtual void set_underline()   = 0;
-			virtual void set_blink()       = 0;
-			virtual void set_invert()      = 0;
-			virtual void set_strike()      = 0;
+	// unsets faint & bold
+	void set_normal_intensity();
 
-			// unsets faint & bold
-			virtual void set_normal_intensity() = 0;
+	void unset_italic();
+	void unset_underline();
+	void unset_blink();
+	void unset_invert();
+	void unset_strike();
 
-			virtual void unset_italic()    = 0;
-			virtual void unset_underline() = 0;
-			virtual void unset_blink()     = 0;
-			virtual void unset_invert()    = 0;
-			virtual void unset_strike()    = 0;
+	void move_cursor(int row, int col);
 
-			virtual void move_cursor(int row, int col) = 0;
+	void set_raw(bool raw);
 
-			virtual void set_raw() = 0;
+	void next_event(Event &event);
 
-			virtual void next_event(Event &event) = 0;
-
-			virtual void flush() = 0;
-	};
+	void flush();
 };
 
 #endif

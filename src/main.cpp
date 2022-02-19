@@ -6,26 +6,30 @@
 
 
 int main() {
-	ANSITerminal term;
-	term.set_raw();
+	Terminal::set_raw(true);
 
 	Terminal::Event event;
 
 	bool running = true;
 
 	while (running) {
-		term.next_event(event);
-		term.print_raw(std::to_string((uint8_t) event.type));
-		term.print_raw(' ');
-		term.flush();
+		Terminal::next_event(event);
+		Terminal::print_raw(std::to_string((uint8_t) event.type));
+		Terminal::print_raw(' ');
+		Terminal::flush();
 
 		switch (event.type) {
 			case Terminal::EventType::EXIT:
 				running = false;
 				break;
+			case Terminal::EventType::KEY:
+				running = event.key_event.codepoint != 'q';
+				break;
 		}
 	}
 
+	Terminal::set_raw(false);
+	Terminal::print_raw("\n");
 	return 0;
 }
 
