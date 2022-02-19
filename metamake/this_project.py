@@ -7,7 +7,7 @@ def get_lib_unicode(makefile, home, bin_dir):
     codegen = os.path.join(home, "codegen")
     include = os.path.join(home, "include")
 
-    l = CxxProject("unicode_lib", bin_dir)
+    l = CxxProject("lib_unicode", bin_dir)
 
     l.add_include_dir(home, "include")
 
@@ -102,7 +102,7 @@ def get_lib_capstone(makefile, home, bin_dir,
 
 
 def get_main_project(makefile, home, bin_dir):
-    lib_unicode = get_lib_unicode(makefile, os.path.join(home, "unicode_lib"), bin_dir)
+    lib_unicode = get_lib_unicode(makefile, os.path.join(home, "lib_unicode"), bin_dir)
     lib_capstone = get_lib_capstone(makefile, os.path.join(home, "lib_capstone"), bin_dir, lib_unicode)
 
     proj = CxxProject("hottellbt_capstone", bin_dir, executable=True)
