@@ -5,13 +5,6 @@
 
 class UTF8TestSuite : public CxxTest::TestSuite {
 	public:
-		template <typename T>
-		void check_equal(T a, T b) {
-			if (a != b) {
-				TS_FAIL("Not equal: " + std::to_string(a) + ", " + std::to_string(b));
-			}
-		}
-
 		bool check_decode_encode(
 				const std::string &input) {
 

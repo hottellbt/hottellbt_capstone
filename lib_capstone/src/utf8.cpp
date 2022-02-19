@@ -11,6 +11,58 @@ inline bool is_appendee(char c) {
 	return (c & 0xC0) == 0x80;
 }
 
+Unicode::string_t UTF8::BufferedDecoder::decode(const char *bytes, const size_t bytes_len) {
+
+	Unicode::string_t ret;
+
+	for (int i = 0; i < bytes_len; i++) {
+		char b = bytes[i];
+
+		if (codepoint_pos == 0) {
+			if ((b & 0x80) == 0x00) {
+				ret.push_back((codepoint_t) b);
+				continue;
+
+			} else if ((b & 0xE0) == 0xC0) {
+				codepoint = b & 0x1F;
+				codepoint_len = 2;
+
+			} else if ((b & 0xF0) == 0xE0) {
+				codepoint = b & 0x0F;
+				codepoint_len = 3;
+
+			} else if ((b & 0xF8) == 0xF0) {
+				codepoint = b & 0x07;
+				codepoint_len = 4;
+
+			} else {
+				throw decoding_error("UTF-8: Disallowed first byte: " + std::to_string(b));
+			}
+
+			codepoint_pos = 1;
+			continue;
+		}
+
+		if (!is_appendee(b)) {
+			throw decoding_error(
+					"UTF-8: Expected byte in range 0x80 to 0xBF, got "
+					+ std::to_string(b));
+		}
+
+		codepoint <<= 6;
+		codepoint |= (b & 0x3f);
+
+		++codepoint_pos;
+		if (codepoint_pos == codepoint_len) {
+			codepoint_pos = 0;
+			ret.push_back(codepoint);
+		}
+	}
+
+	return ret;
+}
+
+/*
 Unicode::string_t UTF8::decode(const std::string &s) {
 	const std::string::size_type s_size = s.size();
 	std::string::size_type s_index = 0;
@@ -70,6 +122,7 @@ Unicode::string_t UTF8::decode(const std::string &s) {
 
 	return ret;
 }
+*/
 
 std::string UTF8::encode(const Unicode::string_t &s) {
 	const auto s_size = s.size();
