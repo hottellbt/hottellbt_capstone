@@ -1,10 +1,15 @@
 #include <string>
 
-#include "coding_error.hpp"
 #include "unicode.hpp"
 #include "utf8.hpp"
 
 using Unicode::codepoint_t;
+using UTF8::encoding_error;
+using UTF8::decoding_error;
+
+inline bool is_appendee(char c) {
+	return (c & 0xC0) == 0x80;
+}
 
 Unicode::string_t UTF8::decode(const std::string &s) {
 	const std::string::size_type s_size = s.size();

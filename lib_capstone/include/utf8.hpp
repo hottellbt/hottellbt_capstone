@@ -5,15 +5,23 @@
 #include "unicode.hpp"
 #endif
 
-namespace UTF8 {
+#include <stdexcept>
 
-	inline bool is_appendee(char c) {
-		return (c & 0xC0) == 0x80;
-	}
+namespace UTF8 {
 
 	Unicode::string_t decode(const std::string &s);
 
 	std::string encode(const Unicode::string_t &s);
+
+	class encoding_error : public std::runtime_error {
+		public:
+			encoding_error(const std::string &msg) : runtime_error(msg) {}
+	};
+
+	class decoding_error : public std::runtime_error {
+		public:
+			decoding_error(const std::string &msg) : runtime_error(msg) {}
+	};
 
 };
 
