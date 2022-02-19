@@ -129,45 +129,52 @@ class Makefile:
 class InclusionTracker:
 
     def __init__(self):
-        self.target_inclusions = {}
+        self.file_inclusions = {}
+        self.examined_files = set()
 
-    def get_inclusion_set(self, target):
-        if self.target_inclusions.get(target) is None:
-            self.target_inclusions[target] = set()
-        return self.target_inclusions.get(target)
+    def _get_inclusion_set(self, file):
+        if file in self.examined_files:
+            return self.file_inclusions[file]
+        else:
+            ret = set()
+            self.file_inclusions[file] = ret;
+            return ret
 
-    def add_inclusion(self, target, inclusion):
-        self.get_inclusion_set(target).add(inclusion)
-
-    def add_inclusions(self, target, inclusions):
-        s = self.get_inclusion_set(target)
+    def set_inclusions(self, file, inclusions):
+        s = self._get_inclusion_set(file)
         for i in inclusions:
             s.add(i)
+        self.examined_files.add(file)
 
     def infer_from_cpp_file(self, file, include_dirs):
+        if file in self.examined_files:
+            return
+
         inclusions = cpp_helper.find_included_files(file, include_dirs)
 
-        # TODO this is kind of a hack - files with 0 inclusions are read over and over
-        # we should track the files we have read (like in a set)
         for inclusion in inclusions:
-            if len(self.get_inclusion_set(inclusion)) == 0:
-                self.infer_from_cpp_file(inclusion, include_dirs)
+            self.infer_from_cpp_file(inclusion, include_dirs)
 
-        self.add_inclusions(file, inclusions)
+        self.set_inclusions(file, inclusions)
 
-    def gen_inclusions(self, file):
-        already = set()
+    def get_inclusions(self, file, include_dirs):
+        if not file in self.examined_files:
+            if file.endswith('.hpp') or file.endswith('.cpp'):
+                self.infer_from_cpp_file(file, include_dirs)
+
+        ret = set()
         queue = [file]
 
         while len(queue) > 0:
             file = queue.pop()
-            if file in already:
+            if file in ret:
                 continue
-            already.add(file)
-            yield file
+            ret.add(file)
 
-            for x in self.get_inclusion_set(file):
+            for x in self._get_inclusion_set(file):
                 queue.append(x)
+
+        return ret
 
 
 # If something (e.g. an include directory) is public, then all projects
@@ -215,23 +222,29 @@ class CxxProject:
         if public:
             self.public_include_dirs.add(include_dir)
 
-    def gen_public_include_dirs(self):
+    def get_public_include_dirs(self):
+        ret = set()
         for x in self.public_include_dirs:
-            yield x
+            ret.add(x)
         for subproj in self.subprojects:
-            for x in subproj.gen_public_include_dirs():
-                yield x
+            for x in subproj.get_public_include_dirs():
+                ret.add(x)
+        return ret
 
-    def gen_all_include_dirs(self):
+    def get_all_include_dirs(self):
+        ret = set()
         for x in self.all_include_dirs:
-            yield x
+            ret.add(x)
         for subproj in self.subprojects:
-            for x in subproj.gen_public_include_dirs():
-                yield x
+            for x in subproj.get_public_include_dirs():
+                ret.add(x)
+        return ret
 
-    def gen_cxxtest_suites(self):
+    def get_cxxtest_suites(self):
+        ret = set()
         for x in self.cxxtest_suites:
-            yield x
+            ret.add(x)
+        return ret
 
     def has_any_cxxtest_suites(self):
         return len(self.cxxtest_suites) > 0
@@ -239,10 +252,8 @@ class CxxProject:
     def add_source_file(self, source_file, headers=None):
         self.source_files.add(source_file)
 
-        if headers is None:
-            self.inclusions.infer_from_cpp_file(source_file, [x for x in self.gen_all_include_dirs()])
-        else:
-            self.inclusions.add_inclusions(source_file, headers)
+        if headers is not None:
+            self.inclusions.set_inclusions(source_file, headers)
 
     def add_source_file_dir(self, source_dir, *files, headers=None):
         for file in files:
@@ -262,25 +273,20 @@ class CxxProject:
         for source_file in self.source_files:
             yield self._src2obj(source_file)
 
-    def gen_linked_objects(self):
-        already = set()
+    def get_linked_objects(self):
+        ret = set()
 
         for x in self.get_project_objects():
-            if not x in already:
-                yield x
-                already.add(x)
+            ret.add(x)
 
         for dep in self.subprojects:
-            for obj in dep.gen_linked_objects():
-                if not obj in already:
-                    yield obj
-                    already.add(obj)
+            for obj in dep.get_linked_objects():
+                ret.add(obj)
+
+        return ret
 
     def get_inclusions(self, source_file):
-        ret = set()
-        for x in self.inclusions.gen_inclusions(source_file):
-            ret.add(x)
-        return ret
+        return self.inclusions.get_inclusions(source_file, self.get_all_include_dirs())
 
     def configure(self, makefile):
         # This is to make sure that we don't run this twice
@@ -288,7 +294,7 @@ class CxxProject:
             return
 
         default_cxx_compile_flags_list = []
-        for x in self.gen_all_include_dirs():
+        for x in self.get_all_include_dirs():
             default_cxx_compile_flags_list.append(f"-I{x}")
         default_cxx_compile_flags = " ".join(default_cxx_compile_flags_list)
 
@@ -296,7 +302,7 @@ class CxxProject:
 
         cxx_link = f"$(CXX)"
         
-        LINKED_OBJS = [x for x in self.gen_linked_objects()]
+        LINKED_OBJS = self.get_linked_objects()
 
         for sf in self.source_files:
             obj = self._src2obj(sf)
@@ -309,14 +315,21 @@ class CxxProject:
         if self.has_any_cxxtest_suites():
 
             test_exe_recipe = self.executable_path + "_test"
-            suites = [x for x in self.gen_cxxtest_suites()]
+            suites = self.get_cxxtest_suites()
+
+            runner_prerequisites = set()
+            for suite in suites:
+                runner_prerequisites.add(suite)
+                for x in self.get_inclusions(suite):
+                    runner_prerequisites.add(x)
+
             runner_name = os.path.join(self.bin_dir, self.name + "_test_runner.cpp")
             runner_obj = runner_name + ".o"
             runner_obj_dir = os.path.dirname(runner_obj)
 
             makefile.add_rule(
                     runner_name,
-                    suites,
+                    runner_prerequisites,
                     f'mkdir -p {runner_obj_dir} && cxxtestgen --error-printer --have-eh -o {runner_name} {" ".join(suites)}')
 
             makefile.add_rule(
