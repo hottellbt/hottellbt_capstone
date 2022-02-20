@@ -23,10 +23,14 @@ sig_atomic_t got_sigint = 0;
 constexpr size_t read_buffer_len = 1028;
 char read_buffer[read_buffer_len];
 
+sig_atomic_t cached_window_size_valid = 0;
+unsigned short cached_window_rows, cached_window_cols;
+
 void signal_handler(int signal) {
 	switch (signal) {
 		case SIGWINCH:
 			got_sigwinch = 1;
+			cached_window_size_valid = 0;
 			break;
 		case SIGINT:
 		case SIGTERM:
@@ -54,23 +58,30 @@ void Terminal::next_event(Terminal::Event &event) {
 
 	if (got_sigwinch == 1) {
 		got_sigwinch = 0;
-		winsize window_size;
-		ioctl(0, TIOCGWINSZ, &window_size);
-
 		event.type = EventType::RESIZE;
-		event.e_resize.rows = window_size.ws_row;
-		event.e_resize.cols = window_size.ws_col;
 		return;
 	}
 
 	if (got_sigint == 1) {
 		got_sigint = 0;
-
 		event.type = EventType::EXIT;
 		return;
 	}
 
 	event.type = EventType::NONE;
+}
+
+void Terminal::get_size(int &cols, int &rows) {
+	if (cached_window_size_valid == 0) {
+		winsize window_size;
+		ioctl(0, TIOCGWINSZ, &window_size);
+		cached_window_rows = window_size.ws_row;
+		cached_window_cols = window_size.ws_col;
+		cached_window_size_valid = 1;
+	}
+
+	rows = cached_window_rows;
+	cols = cached_window_cols;
 }
 
 void Terminal::set_raw(bool raw) {

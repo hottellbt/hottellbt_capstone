@@ -60,10 +60,13 @@ void loop() {
 				break;
 
 			case Terminal::EventType::RESIZE:
+				int rows, cols;
+				Terminal::get_size(cols, rows);
+
 				Terminal::addraw("Resize: rows=");
-				Terminal::addraw(std::to_string(event.e_resize.rows));
+				Terminal::addraw(std::to_string(rows));
 				Terminal::addraw(", cols=");
-				Terminal::addraw(std::to_string(event.e_resize.cols));
+				Terminal::addraw(std::to_string(cols));
 				Terminal::addraw("\n\r");
 				break;
 

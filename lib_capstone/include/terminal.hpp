@@ -39,17 +39,9 @@ namespace Terminal {
 		Unicode::string_t text {};
 	};
 
-	struct EventResize {
-		unsigned int rows;
-		unsigned int cols;
-	};
-
 	struct Event {
 		EventType type = EventType::NONE;
-
-		// could not make a union because nontrivial
 		EventText   e_text;
-		EventResize e_resize;
 	};
 
 	void enable_alt_buffer();
@@ -90,16 +82,18 @@ namespace Terminal {
 
 	void flush();
 
+	void get_size(int &cols, int &rows);
+
 	// curses-like
 
 	void mv_home(); // equivalent to mv(0, 0)
 
-	void mv(int row, int col);
+	void mv(int col, int row);
 
 	void addstr(const Unicode::string_t &str);
 
-	inline void mvaddstr(int row, int col, const Unicode::string_t &str) {
-		mv(row, col);
+	inline void mvaddstr(int col, int row, const Unicode::string_t &str) {
+		mv(col, row);
 		addstr(str);
 	}
 
@@ -109,8 +103,8 @@ namespace Terminal {
 		addstr(s);
 	}
 
-	inline void mvaddcp(int row, int col, Unicode::codepoint_t cp) {
-		mv(row, col);
+	inline void mvaddcp(int col, int row, Unicode::codepoint_t cp) {
+		mv(col, row);
 		addcp(cp);
 	}
 
@@ -118,18 +112,18 @@ namespace Terminal {
 	void addraw(const char* str);
 	void addraw(char c);
 
-	inline void mvaddraw(int row, int col, const std::string &str) {
-		mv(row, col);
+	inline void mvaddraw(int col, int row, const std::string &str) {
+		mv(col, row);
 		addraw(str);
 	}
 
-	inline void mvaddraw(int row, int col, const char* str) {
-		mv(row, col);
+	inline void mvaddraw(int col, int row, const char* str) {
+		mv(col, row);
 		addraw(str);
 	}
 
-	inline void mvaddraw(int row, int col, char c) {
-		mv(row, col);
+	inline void mvaddraw(int col, int row, char c) {
+		mv(col, row);
 		addraw(c);
 	}
 };
