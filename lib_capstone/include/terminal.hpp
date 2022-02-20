@@ -215,9 +215,9 @@ namespace Terminal {
 
 	inline void mv(int col, int row) {
 		addraw("\x1b[");
-		addraw(std::to_string(row));
+		addraw(std::to_string(row + 1));
 		addraw(';');
-		addraw(std::to_string(col));
+		addraw(std::to_string(col + 1));
 		addraw('H');
 	}
 
