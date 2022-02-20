@@ -13,6 +13,14 @@ namespace Terminal {
 	inline void print_raw(const char* str)        { std::cout << str; }
 	inline void print_raw(char c)                 { std::cout << c; }
 
+	inline void enable_alt_buffer() {
+		print_raw("\x1b[?1049h");
+	}
+
+	inline void disable_alt_buffer() {
+		print_raw("\x1b[?1049l");
+	}
+
 	inline void clear() {
 		print_raw("\x1b[2J");
 	}
@@ -74,12 +82,16 @@ namespace Terminal {
 	inline void unset_invert()    { print_raw("\x1b[27m"); }
 	inline void unset_strike()    { print_raw("\x1b[29m"); }
 
-	inline void move_cursor(unsigned int col, unsigned int row) {
+	inline void mv(int col, int row) {
 		print_raw("\x1b[");
 		print_raw(std::to_string(row));
 		print_raw(';');
 		print_raw(std::to_string(col));
-		print_raw("mh");
+		print_raw("H");
+	}
+
+	inline void mv_home() {
+		print_raw("\x1b[H");
 	}
 
 };

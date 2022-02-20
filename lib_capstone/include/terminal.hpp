@@ -52,6 +52,9 @@ namespace Terminal {
 		EventResize e_resize;
 	};
 
+	void enable_alt_buffer();
+	void disable_alt_buffer();
+
 	void clear();
 
 	void print(Unicode::string_t);
@@ -93,7 +96,8 @@ namespace Terminal {
 	void unset_invert();
 	void unset_strike();
 
-	void move_cursor(int row, int col);
+	void mv(int row, int col);
+	void mv_home();
 
 	void set_raw(bool raw);
 

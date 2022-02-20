@@ -6,6 +6,11 @@
 
 
 int main() {
+	Terminal::enable_alt_buffer();
+	Terminal::flush();
+	Terminal::clear();
+	Terminal::mv_home();
+	Terminal::flush();
 	Terminal::set_raw(true);
 
 	Terminal::Event event;
@@ -47,8 +52,9 @@ int main() {
 		}
 	}
 
+	Terminal::flush();
 	Terminal::set_raw(false);
-	Terminal::print_raw("\n");
+	Terminal::disable_alt_buffer();
 	return 0;
 }
 
