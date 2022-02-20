@@ -788,15 +788,15 @@ namespace Unicode {
 
 	/***** data types to strings *****/
 
-	std::string to_string(GeneralCategory x);
-	std::string to_string(HangulSyllableType x);
-	std::string to_string(IndicSyllabicCategory x);
-	std::string to_string(EastAsianWidth x);
-	std::string to_string(GraphemeClusterBreak x);
-	std::string to_string(WordBreak x);
-	std::string to_string(LineBreak x);
-	std::string to_string(SentenceBreak x);
-	std::string to_string(Script x);
+	const char* to_string(GeneralCategory x);
+	const char* to_string(HangulSyllableType x);
+	const char* to_string(IndicSyllabicCategory x);
+	const char* to_string(EastAsianWidth x);
+	const char* to_string(GraphemeClusterBreak x);
+	const char* to_string(WordBreak x);
+	const char* to_string(LineBreak x);
+	const char* to_string(SentenceBreak x);
+	const char* to_string(Script x);
 
 	inline std::string to_string(codepoint_t x) {
 		static const char HEX_CHARS[] = {

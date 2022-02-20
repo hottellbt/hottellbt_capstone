@@ -447,7 +447,7 @@ Unicode::SentenceBreak Unicode::get_sentence_break(codepoint_t codepoint) {
 	return X::Other;
 }
 
-std::string Unicode::to_string(Unicode::GeneralCategory x) {
+const char* Unicode::to_string(Unicode::GeneralCategory x) {
 	using X = GeneralCategory;
 	switch (x) {
 		case X::Cc: return "Cc";
@@ -484,7 +484,7 @@ std::string Unicode::to_string(Unicode::GeneralCategory x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::HangulSyllableType x) {
+const char* Unicode::to_string(Unicode::HangulSyllableType x) {
 	using X = HangulSyllableType;
 	switch(x) {
 		case X::NA:  return "N/A";
@@ -497,7 +497,7 @@ std::string Unicode::to_string(Unicode::HangulSyllableType x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::IndicSyllabicCategory x) {
+const char* Unicode::to_string(Unicode::IndicSyllabicCategory x) {
 	using X = IndicSyllabicCategory;
 	switch(x) {
 		case X::NA:                          return "NA";
@@ -541,7 +541,7 @@ std::string Unicode::to_string(Unicode::IndicSyllabicCategory x) {
 	}
 };
 
-std::string Unicode::to_string(Unicode::EastAsianWidth x) {
+const char* Unicode::to_string(Unicode::EastAsianWidth x) {
 	using X = Unicode::EastAsianWidth;
 	switch (x) {
 		case X::A:  return "A";
@@ -554,7 +554,7 @@ std::string Unicode::to_string(Unicode::EastAsianWidth x) {
 	}
 };
 
-std::string Unicode::to_string(Unicode::GraphemeClusterBreak x) {
+const char* Unicode::to_string(Unicode::GraphemeClusterBreak x) {
 	using X = Unicode::GraphemeClusterBreak;
 	switch (x) {
 		case X::Other:       return "Other";
@@ -575,7 +575,7 @@ std::string Unicode::to_string(Unicode::GraphemeClusterBreak x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::WordBreak x) {
+const char* Unicode::to_string(Unicode::WordBreak x) {
 	using X = WordBreak;
 	switch (x) {
 		case X::Other:              return "Other";
@@ -601,7 +601,7 @@ std::string Unicode::to_string(Unicode::WordBreak x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::LineBreak x) {
+const char* Unicode::to_string(Unicode::LineBreak x) {
 	using X = Unicode::LineBreak;
 	switch (x) {
 		case X::XX:  return "XX";
@@ -651,7 +651,7 @@ std::string Unicode::to_string(Unicode::LineBreak x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::Script x) {
+const char* Unicode::to_string(Unicode::Script x) {
 	using X = Unicode::Script;
 	switch(x) {
 		case X::Unknown:                return "Unknown";
@@ -820,7 +820,7 @@ std::string Unicode::to_string(Unicode::Script x) {
 	}
 }
 
-std::string Unicode::to_string(Unicode::SentenceBreak x) {
+const char* Unicode::to_string(Unicode::SentenceBreak x) {
 	using X = Unicode::SentenceBreak;
 	switch(x) {
 		case X::Other:     return "Other";
