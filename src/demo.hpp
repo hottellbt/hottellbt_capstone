@@ -1,10 +1,54 @@
 #include "unicode.hpp"
 #include "terminal.hpp"
 
-class List {
+struct Boundary {
+	unsigned int x;
+	unsigned int y;
+	unsigned int width;
+	unsigned int height;
+
+	Boundary() : x(0), y(0), width(0), height(0) {}
+	Boundary(int x, int y, int w, int h) : x(x), y(y), width(w), height(h) {}
+};
+
+class Component {
 	public:
-		void full_draw();
-		void quick_draw();
+		Component() {};
+
+		void set_needs_redraw() {
+			this->needs_full_draw = true;
+		}
+
+		void set_bounds(const Boundary &bounds) {
+			this->bounds = bounds;
+			this->needs_full_draw = true;
+		}
+
+		void full_draw() {
+			do_full_draw();
+			this->needs_full_draw = false;
+		}
+
+		void quick_draw() {
+			if (this->needs_full_draw) {
+				full_draw();
+				return;
+			}
+			do_quick_draw();
+		}
+
+	protected:
+		virtual void do_full_draw() = 0;
+		virtual void do_quick_draw() = 0;
+
+		bool needs_full_draw = true;
+		Boundary bounds;
+};
+
+class List : public Component {
+	public:
+		void do_full_draw();
+		void do_quick_draw();
 
 		int get_num_options();
 		Unicode::string_t get_option(int idx);
@@ -26,8 +70,6 @@ class List {
 		}
 
 	private:
-		bool needs_full_draw = true;
-		int x = 0, y = 0, width = 10, height = 10;
 		int prior_selection_idx = 0;
 		int selection_idx = 0;
 
@@ -35,6 +77,7 @@ class List {
 };
 
 namespace Demo {
+	void init();
 	void event(const Terminal::Event &event);
 	void draw();
 	bool is_running();

@@ -18,6 +18,7 @@ int main() {
 
 	try {
 
+		Demo::init();
 		Demo::draw();
 
 		Terminal::Event event;
