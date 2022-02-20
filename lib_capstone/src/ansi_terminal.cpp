@@ -4,7 +4,6 @@
 */
 
 #include "terminal.hpp"
-#include "ansi_terminal.hpp"
 
 #include <signal.h>
 #include <termios.h>

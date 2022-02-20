@@ -2,7 +2,7 @@
 
 #include "unicode.hpp"
 
-#include "ansi_terminal.hpp"
+#include "terminal.hpp"
 
 
 int main() {
