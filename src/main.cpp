@@ -55,20 +55,20 @@ void loop() {
 		switch (event.type) {
 
 			case Terminal::EventType::EXIT:
-				Terminal::print(UTF8::decode("Exit\n\r"));
+				Terminal::addraw("Exit\n\r");
 				running = false;
 				break;
 
 			case Terminal::EventType::RESIZE:
-				Terminal::print(UTF8::decode("Resize: rows="));
-				Terminal::print_raw(std::to_string(event.e_resize.rows));
-				Terminal::print(UTF8::decode(", cols="));
-				Terminal::print_raw(std::to_string(event.e_resize.cols));
-				Terminal::print_raw("\n\r");
+				Terminal::addraw("Resize: rows=");
+				Terminal::addraw(std::to_string(event.e_resize.rows));
+				Terminal::addraw(", cols=");
+				Terminal::addraw(std::to_string(event.e_resize.cols));
+				Terminal::addraw("\n\r");
 				break;
 
 			case Terminal::EventType::TEXT:
-				Terminal::print(UTF8::decode("Text: "));
+				Terminal::addraw("Text: ");
 
 				for (auto cp : event.e_text.text) {
 					if (cp == 'q') {
@@ -76,9 +76,9 @@ void loop() {
 					}
 				}
 
-				Terminal::print(event.e_text.text);
+				Terminal::addstr(event.e_text.text);
 
-				Terminal::print_raw("\n\r");
+				Terminal::addraw("\n\r");
 				break;
 		}
 	}

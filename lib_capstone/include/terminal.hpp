@@ -57,18 +57,6 @@ namespace Terminal {
 
 	void clear();
 
-	void print(Unicode::string_t);
-
-	inline void print(Unicode::codepoint_t cp) {
-		Unicode::string_t s;
-		s.push_back(cp);
-		print(s);
-	}
-
-	void print_raw(const std::string &str);
-	void print_raw(const char* str);
-	void print_raw(char c);
-
 	void set_fg(uint8_t color_16);
 	void set_bg(uint8_t color_16);
 
@@ -96,14 +84,54 @@ namespace Terminal {
 	void unset_invert();
 	void unset_strike();
 
-	void mv(int row, int col);
-	void mv_home();
-
 	void set_raw(bool raw);
 
 	void next_event(Event &event);
 
 	void flush();
+
+	// curses-like
+
+	void mv_home(); // equivalent to mv(0, 0)
+
+	void mv(int row, int col);
+
+	void addstr(const Unicode::string_t &str);
+
+	inline void mvaddstr(int row, int col, const Unicode::string_t &str) {
+		mv(row, col);
+		addstr(str);
+	}
+
+	inline void addcp(Unicode::codepoint_t cp) {
+		Unicode::string_t s;
+		s.push_back(cp);
+		addstr(s);
+	}
+
+	inline void mvaddcp(int row, int col, Unicode::codepoint_t cp) {
+		mv(row, col);
+		addcp(cp);
+	}
+
+	void addraw(const std::string &str);
+	void addraw(const char* str);
+	void addraw(char c);
+
+	inline void mvaddraw(int row, int col, const std::string &str) {
+		mv(row, col);
+		addraw(str);
+	}
+
+	inline void mvaddraw(int row, int col, const char* str) {
+		mv(row, col);
+		addraw(str);
+	}
+
+	inline void mvaddraw(int row, int col, char c) {
+		mv(row, col);
+		addraw(c);
+	}
 };
 
 
@@ -116,89 +144,89 @@ namespace Terminal {
 
 namespace Terminal {
 
-	inline void print_raw(const std::string &str) { std::cout << str; }
-	inline void print_raw(const char* str)        { std::cout << str; }
-	inline void print_raw(char c)                 { std::cout << c; }
-
 	inline void enable_alt_buffer() {
-		print_raw("\x1b[?1049h");
+		addraw("\x1b[?1049h");
 	}
 
 	inline void disable_alt_buffer() {
-		print_raw("\x1b[?1049l");
+		addraw("\x1b[?1049l");
 	}
 
 	inline void clear() {
-		print_raw("\x1b[2J");
-	}
-
-	inline void print(Unicode::string_t s) {
-		print_raw(UTF8::encode(s));
+		addraw("\x1b[2J");
 	}
 
 	inline void set_fg(uint8_t color_16) {
-		print_raw("\x1b[38;5;");
-		print_raw(std::to_string(color_16));
-		print_raw('m');
+		addraw("\x1b[38;5;");
+		addraw(std::to_string(color_16));
+		addraw('m');
 	}
 
 	inline void set_bg(uint8_t color_16) {
-		print_raw("\x1b[48;5;");
-		print_raw(std::to_string(color_16));
-		print_raw('m');
+		addraw("\x1b[48;5;");
+		addraw(std::to_string(color_16));
+		addraw('m');
 	}
 
 	inline void set_fg(uint8_t r, uint8_t g, uint8_t b) {
-		print_raw("\x1b[38;2;");
-		print_raw(std::to_string(r));
-		print_raw(';');
-		print_raw(std::to_string(g));
-		print_raw(';');
-		print_raw(std::to_string(b));
-		print_raw('m');
+		addraw("\x1b[38;2;");
+		addraw(std::to_string(r));
+		addraw(';');
+		addraw(std::to_string(g));
+		addraw(';');
+		addraw(std::to_string(b));
+		addraw('m');
 	}
 
 	inline void set_bg(uint8_t r, uint8_t g, uint8_t b) {
-		print_raw("\x1b[48;2;");
-		print_raw(std::to_string(r));
-		print_raw(';');
-		print_raw(std::to_string(g));
-		print_raw(';');
-		print_raw(std::to_string(b));
-		print_raw('m');
+		addraw("\x1b[48;2;");
+		addraw(std::to_string(r));
+		addraw(';');
+		addraw(std::to_string(g));
+		addraw(';');
+		addraw(std::to_string(b));
+		addraw('m');
 	}
 
-	inline void unset_bg()    { print_raw("\x1b[49m"); };
-	inline void unset_fg()    { print_raw("\x1b[39m"); };
-	inline void unset_bg_fg() { print_raw("\x1b[39;49m"); };
+	inline void unset_bg()    { addraw("\x1b[49m"); };
+	inline void unset_fg()    { addraw("\x1b[39m"); };
+	inline void unset_bg_fg() { addraw("\x1b[39;49m"); };
 
-	inline void set_bold()        { print_raw("\x1b[1m"); }
-	inline void set_faint()       { print_raw("\x1b[2m"); }
-	inline void set_italic()      { print_raw("\x1b[3m"); }
-	inline void set_underline()   { print_raw("\x1b[4m"); }
-	inline void set_blink()       { print_raw("\x1b[5m"); }
-	inline void set_invert()      { print_raw("\x1b[7m"); }
-	inline void set_strike()      { print_raw("\x1b[9m"); }
+	inline void set_bold()        { addraw("\x1b[1m"); }
+	inline void set_faint()       { addraw("\x1b[2m"); }
+	inline void set_italic()      { addraw("\x1b[3m"); }
+	inline void set_underline()   { addraw("\x1b[4m"); }
+	inline void set_blink()       { addraw("\x1b[5m"); }
+	inline void set_invert()      { addraw("\x1b[7m"); }
+	inline void set_strike()      { addraw("\x1b[9m"); }
 
 	// unsets faint & bold
-	inline void set_normal_intensity() { print_raw("\x1b[22m"); }
+	inline void set_normal_intensity() { addraw("\x1b[22m"); }
 
-	inline void unset_italic()    { print_raw("\x1b[23m"); }
-	inline void unset_underline() { print_raw("\x1b[24m"); }
-	inline void unset_blink()     { print_raw("\x1b[25m"); }
-	inline void unset_invert()    { print_raw("\x1b[27m"); }
-	inline void unset_strike()    { print_raw("\x1b[29m"); }
+	inline void unset_italic()    { addraw("\x1b[23m"); }
+	inline void unset_underline() { addraw("\x1b[24m"); }
+	inline void unset_blink()     { addraw("\x1b[25m"); }
+	inline void unset_invert()    { addraw("\x1b[27m"); }
+	inline void unset_strike()    { addraw("\x1b[29m"); }
+
+	inline void addraw(const std::string &str) { std::cout << str; }
+	inline void addraw(const char* str)        { std::cout << str; }
+	inline void addraw(char c)                 { std::cout << c; }
 
 	inline void mv(int col, int row) {
-		print_raw("\x1b[");
-		print_raw(std::to_string(row));
-		print_raw(';');
-		print_raw(std::to_string(col));
-		print_raw("H");
+		addraw("\x1b[");
+		addraw(std::to_string(row));
+		addraw(';');
+		addraw(std::to_string(col));
+		addraw('H');
 	}
 
 	inline void mv_home() {
-		print_raw("\x1b[H");
+		addraw("\x1b[H");
+	}
+
+	inline void addstr(const Unicode::string_t &s) {
+		addraw(UTF8::encode(s));
 	}
 
 };
