@@ -120,14 +120,17 @@ void List::do_quick_draw() {
 List list;
 bool running = true;
 
+void on_resize() {
+	int w, h;
+	Terminal::get_size(w, h);
+	list.set_bounds({0, 0, w, h});
+}
+
 void Demo::init() {
-	list.set_bounds({1,1,5,10});
+	on_resize();
 }
 
 void Demo::draw() {
-	int w, h;
-	Terminal::get_size(w, h);
-
 	list.quick_draw();
 	Terminal::flush();
 }
@@ -140,9 +143,9 @@ void Demo::event(const Terminal::Event &event) {
 			break;
 
 		case Terminal::EventType::RESIZE:
-			Demo::draw();
 			Terminal::clear();
-			list.set_needs_redraw();
+			on_resize();
+			Demo::draw();
 			break;
 
 		case Terminal::EventType::TEXT:
@@ -156,6 +159,12 @@ void Demo::event(const Terminal::Event &event) {
 						break;
 					case 'k':
 						list.move_selection_index(-1);
+						break;
+					case 'g':
+						list.set_selection_index(0);
+						break;
+					case 'G':
+						list.set_selection_index(list.get_num_options() - 1);
 						break;
 				}
 			}
