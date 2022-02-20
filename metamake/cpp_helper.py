@@ -23,6 +23,10 @@ def extract_quoted_include(line):
 def read_quoted_includes(file_path):
     ret = set()
 
+    if not os.path.isfile(file_path):
+        eprint(f"warning: {file_path} is not a file, or does not exist yet, so it cannot be checked for any #include statements")
+        return ret
+
     with open(file_path) as f:
         for ln in f:
             inc = extract_quoted_include(ln)
