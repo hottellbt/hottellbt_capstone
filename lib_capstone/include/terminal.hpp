@@ -84,6 +84,9 @@ namespace Terminal {
 
 	void get_size(int &cols, int &rows);
 
+	void show_cursor();
+	void hide_cursor();
+
 	// curses-like
 
 	void mv_home(); // equivalent to mv(0, 0)
@@ -202,6 +205,9 @@ namespace Terminal {
 	inline void unset_blink()     { addraw("\x1b[25m"); }
 	inline void unset_invert()    { addraw("\x1b[27m"); }
 	inline void unset_strike()    { addraw("\x1b[29m"); }
+
+	inline void show_cursor() { addraw("\x1b[?25h"); }
+	inline void hide_cursor() { addraw("\x1b[?25l"); }
 
 	inline void addraw(const std::string &str) { std::cout << str; }
 	inline void addraw(const char* str)        { std::cout << str; }

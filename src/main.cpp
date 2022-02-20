@@ -40,6 +40,16 @@ void cleanup() {
 	Terminal::flush();
 	Terminal::set_raw(false);
 	Terminal::disable_alt_buffer();
+	Terminal::show_cursor();
+}
+
+void draw() {
+	int w, h;
+	Terminal::mvaddraw(0, 0, "press q");
+	Terminal::hide_cursor();
+	Terminal::get_size(w, h);
+	Terminal::mvaddraw(w/2, h/2, ":-)");
+	Terminal::flush();
 }
 
 void loop() {
@@ -48,6 +58,8 @@ void loop() {
 
 	bool running = true;
 
+	draw();
+
 	while (running) {
 
 		Terminal::next_event(event);
@@ -55,33 +67,20 @@ void loop() {
 		switch (event.type) {
 
 			case Terminal::EventType::EXIT:
-				Terminal::addraw("Exit\n\r");
 				running = false;
 				break;
 
 			case Terminal::EventType::RESIZE:
-				int rows, cols;
-				Terminal::get_size(cols, rows);
-
-				Terminal::addraw("Resize: rows=");
-				Terminal::addraw(std::to_string(rows));
-				Terminal::addraw(", cols=");
-				Terminal::addraw(std::to_string(cols));
-				Terminal::addraw("\n\r");
+				Terminal::clear();
+				draw();
 				break;
 
 			case Terminal::EventType::TEXT:
-				Terminal::addraw("Text: ");
-
 				for (auto cp : event.e_text.text) {
 					if (cp == 'q') {
 						running = false;
 					}
 				}
-
-				Terminal::addstr(event.e_text.text);
-
-				Terminal::addraw("\n\r");
 				break;
 		}
 	}
