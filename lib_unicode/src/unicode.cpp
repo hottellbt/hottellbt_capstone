@@ -446,3 +446,399 @@ Unicode::SentenceBreak Unicode::get_sentence_break(codepoint_t codepoint) {
 
 	return X::Other;
 }
+
+std::string Unicode::to_string(Unicode::GeneralCategory x) {
+	using X = GeneralCategory;
+	switch (x) {
+		case X::Cc: return "Cc";
+		case X::Cf: return "Cf";
+		case X::Cn: return "Cn";
+		case X::Co: return "Co";
+		case X::Cs: return "Cs";
+		case X::Ll: return "Ll";
+		case X::Lm: return "Lm";
+		case X::Lo: return "Lo";
+		case X::Lt: return "Lt";
+		case X::Lu: return "Lu";
+		case X::Mc: return "Mc";
+		case X::Me: return "Me";
+		case X::Mn: return "Mn";
+		case X::Nd: return "Nd";
+		case X::Nl: return "Nl";
+		case X::No: return "No";
+		case X::Pc: return "Pc";
+		case X::Pd: return "Pd";
+		case X::Pe: return "Pe";
+		case X::Pf: return "Pf";
+		case X::Pi: return "Pi";
+		case X::Po: return "Po";
+		case X::Ps: return "Ps";
+		case X::Sc: return "Sc";
+		case X::Sk: return "Sk";
+		case X::Sm: return "Sm";
+		case X::So: return "So";
+		case X::Zl: return "Zl";
+		case X::Zp: return "Zp";
+		case X::Zs: return "Zs";
+		default: return "??";
+	}
+}
+
+std::string Unicode::to_string(Unicode::HangulSyllableType x) {
+	using X = HangulSyllableType;
+	switch(x) {
+		case X::NA:  return "N/A";
+		case X::L:   return "L";
+		case X::V:   return "V";
+		case X::T:   return "T";
+		case X::LV:  return "LV";
+		case X::LVT: return "LVT";
+		default: return "?";
+	}
+}
+
+std::string Unicode::to_string(Unicode::IndicSyllabicCategory x) {
+	using X = IndicSyllabicCategory;
+	switch(x) {
+		case X::NA:                          return "NA";
+		case X::Avagraha:                    return "Avagraha";
+		case X::Bindu:                       return "Bindu";
+		case X::Brahmi_Joining_Number:       return "Brahmi_Joining_Number";
+		case X::Cantillation_Mark:           return "Cantillation_Mark";
+		case X::Consonant:                   return "Consonant";
+		case X::Consonant_Dead:              return "Consonant_Dead";
+		case X::Consonant_Final:             return "Consonant_Final";
+		case X::Consonant_Head_Letter:       return "Consonant";
+		case X::Consonant_Initial_Postfixed: return "Consonant_Initial_Postfixed";
+		case X::Consonant_Killer:            return "Consonant_Killer";
+		case X::Consonant_Medial:            return "Consonant_Medial";
+		case X::Consonant_Placeholder:       return "Consonant_Placeholder";
+		case X::Consonant_Preceding_Repha:   return "Consonant_Preceding_Repha";
+		case X::Consonant_Prefixed:          return "Consonant_Prefixed";
+		case X::Consonant_Subjoined:         return "Consonant_Subjoined";
+		case X::Consonant_Succeeding_Repha:  return "Consonant_Succeeding_Repha";
+		case X::Consonant_With_Stacker:      return "Consonant_With_Stacker";
+		case X::Gemination_Mark:             return "Gemination_Mark";
+		case X::Invisible_Stacker:           return "Invisible_Stacker";
+		case X::Joiner:                      return "Joiner";
+		case X::Modifying_Letter:            return "Modifying_Letter";
+		case X::Non_Joiner:                  return "Non_Joiner";
+		case X::Nukta:                       return "Nukta";
+		case X::Number:                      return "Number";
+		case X::Number_Joiner:               return "Number_Joiner";
+		case X::Other:                       return "Other";
+		case X::Pure_Killer:                 return "Pure_Killer";
+		case X::Register_Shifter:            return "Register_Shifter";
+		case X::Syllable_Modifier:           return "Syllable_Modifier";
+		case X::Tone_Letter:                 return "Tone_Letter";
+		case X::Tone_Mark:                   return "Tone_Mark";
+		case X::Virama:                      return "Virama";
+		case X::Visarga:                     return "Visarga";
+		case X::Vowel:                       return "Vowel";
+		case X::Vowel_Dependent:             return "Vowel_Dependent";
+		case X::Vowel_Independent:           return "Vowel_Independent";
+		default: return "???";
+	}
+};
+
+std::string Unicode::to_string(Unicode::EastAsianWidth x) {
+	using X = Unicode::EastAsianWidth;
+	switch (x) {
+		case X::A:  return "A";
+		case X::F:  return "F";
+		case X::H:  return "H";
+		case X::N:  return "N";
+		case X::Na: return "Na";
+		case X::W:  return "W";
+		default: return "?";
+	}
+};
+
+std::string Unicode::to_string(Unicode::GraphemeClusterBreak x) {
+	using X = Unicode::GraphemeClusterBreak;
+	switch (x) {
+		case X::Other:       return "Other";
+		case X::CR:          return "CR";
+		case X::LF:          return "LF";
+		case X::Control:     return "Control";
+		case X::Extend:      return "Extend";
+		case X::ZWJ:         return "ZWJ";
+		case X::Regional_Indicator: return "Regional_Indicator";
+		case X::Prepend:     return "Prepend";
+		case X::SpacingMark: return "SpacingMark";
+		case X::L:           return "L";
+		case X::V:           return "V";
+		case X::T:           return "T";
+		case X::LV:          return "LV";
+		case X::LVT:         return "LVT";
+		default: return "???";
+	}
+}
+
+std::string Unicode::to_string(Unicode::WordBreak x) {
+	using X = WordBreak;
+	switch (x) {
+		case X::Other:              return "Other";
+		case X::CR:                 return "CR";
+		case X::LF:                 return "LF";
+		case X::Newline:            return "Newline";
+		case X::Extend:             return "Extend";
+		case X::ZWJ:                return "ZWJ";
+		case X::Regional_Indicator: return "Regional_Indicator";
+		case X::Format:             return "Format";
+		case X::Katakana:           return "Katakana";
+		case X::Hebrew_Letter:      return "Hebrew_Letter";
+		case X::ALetter:            return "ALetter";
+		case X::Single_Quote:       return "Single_Quote";
+		case X::Double_Quote:       return "Double_Quote";
+		case X::MidNumLet:          return "MidNumLet";
+		case X::MidLetter:          return "MidLetter";
+		case X::MidNum:             return "MidNum";
+		case X::Numeric:            return "Numeric";
+		case X::ExtendNumLet:       return "ExtendNumLet";
+		case X::WSegSpace:          return "WSegSpace";
+		default: return "???";
+	}
+}
+
+std::string Unicode::to_string(Unicode::LineBreak x) {
+	using X = Unicode::LineBreak;
+	switch (x) {
+		case X::XX:  return "XX";
+		case X::BK:  return "BK";
+		case X::CR:  return "CR";
+		case X::LF:  return "LF";
+		case X::CM:  return "CM";
+		case X::NL:  return "NL";
+		case X::SG:  return "SG";
+		case X::WJ:  return "WJ";
+		case X::ZW:  return "ZW";
+		case X::GL:  return "GL";
+		case X::SP:  return "SP";
+		case X::ZWJ: return "ZWJ";
+		case X::B2:  return "B2"; 
+		case X::BA:  return "BA";
+		case X::BB:  return "BB";
+		case X::HY:  return "HY";
+		case X::CB:  return "CB";
+		case X::CL:  return "CL";
+		case X::CP:  return "CP";
+		case X::EX:  return "EX";
+		case X::IN:  return "IN";
+		case X::NS:  return "NS";
+		case X::OP:  return "OP";
+		case X::QU:  return "QU";
+		case X::IS:  return "IS";
+		case X::NU:  return "NU";
+		case X::PO:  return "PO";
+		case X::PR:  return "PR";
+		case X::SY:  return "SY";
+		case X::AI:  return "AI";
+		case X::AL:  return "AL";
+		case X::CJ:  return "CJ";
+		case X::EB:  return "EB";
+		case X::EM:  return "EM";
+		case X::H2:  return "H2";
+		case X::H3:  return "H3";
+		case X::HL:  return "HL";
+		case X::ID:  return "ID";
+		case X::JL:  return "JL";
+		case X::JV:  return "JV";
+		case X::JT:  return "JT";
+		case X::RI:  return "RI";
+		case X::SA:  return "SA";
+		default: return "??";
+	}
+}
+
+std::string Unicode::to_string(Unicode::Script x) {
+	using X = Unicode::Script;
+	switch(x) {
+		case X::Unknown:                return "Unknown";
+		case X::Common:                 return "Common";
+		case X::Latin:                  return "Latin";
+		case X::Greek:                  return "Greek";
+		case X::Cyrillic:               return "Cyrillic";
+		case X::Armenian:               return "Armenian";
+		case X::Hebrew:                 return "Hebrew";
+		case X::Arabic:                 return "Arabic";
+		case X::Syriac:                 return "Syriac";
+		case X::Thaana:                 return "Thaana";
+		case X::Devanagari:             return "Devanagari";
+		case X::Bengali:                return "Bengali";
+		case X::Gurmukhi:               return "Gurmukhi";
+		case X::Gujarati:               return "Gujarati";
+		case X::Oriya:                  return "Oriya";
+		case X::Tamil:                  return "Tamil";
+		case X::Telugu:                 return "Telugu";
+		case X::Kannada:                return "Kannada";
+		case X::Malayalam:              return "Malayalam";
+		case X::Sinhala:                return "Sinhala";
+		case X::Thai:                   return "Thai";
+		case X::Lao:                    return "Lao";
+		case X::Tibetan:                return "Tibetan";
+		case X::Myanmar:                return "Myanmar";
+		case X::Georgian:               return "Georgian";
+		case X::Hangul:                 return "Hangul";
+		case X::Ethiopic:               return "Ethiopic";
+		case X::Cherokee:               return "Cherokee";
+		case X::Canadian_Aboriginal:    return "Canadian_Aboriginal";
+		case X::Ogham:                  return "Ogham";
+		case X::Runic:                  return "Runic";
+		case X::Khmer:                  return "Khmer";
+		case X::Mongolian:              return "Mongolian";
+		case X::Hiragana:               return "Hiragana";
+		case X::Katakana:               return "Katakana";
+		case X::Bopomofo:               return "Bopomofo";
+		case X::Han:                    return "Han";
+		case X::Yi:                     return "Yi";
+		case X::Old_Italic:             return "Old_Italic";
+		case X::Gothic:                 return "Gothic";
+		case X::Deseret:                return "Deseret";
+		case X::Inherited:              return "Inherited";
+		case X::Tagalog:                return "Tagalog";
+		case X::Hanunoo:                return "Hanunoo";
+		case X::Buhid:                  return "Buhid";
+		case X::Tagbanwa:               return "Tagbanwa";
+		case X::Limbu:                  return "Limbu";
+		case X::Tai_Le:                 return "Tai_Le";
+		case X::Linear_B:               return "Linear_B";
+		case X::Ugaritic:               return "Ugaritic";
+		case X::Shavian:                return "Shavian";
+		case X::Osmanya:                return "Osmanya";
+		case X::Cypriot:                return "Cypriot";
+		case X::Braille:                return "Braille";
+		case X::Buginese:               return "Buginese";
+		case X::Coptic:                 return "Coptic";
+		case X::New_Tai_Lue:            return "New_Tai_Lue";
+		case X::Glagolitic:             return "Glagolitic";
+		case X::Tifinagh:               return "Tifinagh";
+		case X::Syloti_Nagri:           return "Syloti_Nagri";
+		case X::Old_Persian:            return "Old_Persian";
+		case X::Kharoshthi:             return "Kharoshthi";
+		case X::Balinese:               return "Balinese";
+		case X::Cuneiform:              return "Cuneiform";
+		case X::Phoenician:             return "Phoenician";
+		case X::Phags_Pa:               return "Phags_Pa";
+		case X::Nko:                    return "Nko";
+		case X::Sundanese:              return "Sundanese";
+		case X::Lepcha:                 return "Lepcha";
+		case X::Ol_Chiki:               return "Ol_Chiki";
+		case X::Vai:                    return "Vai";
+		case X::Saurashtra:             return "Saurashtra";
+		case X::Kayah_Li:               return "Kayah_Li";
+		case X::Rejang:                 return "Rejang";
+		case X::Lycian:                 return "Lycian";
+		case X::Carian:                 return "Carian";
+		case X::Lydian:                 return "Lydian";
+		case X::Cham:                   return "Cham";
+		case X::Tai_Tham:               return "Tai_Tham";
+		case X::Tai_Viet:               return "Tai_Viet";
+		case X::Avestan:                return "Avestan";
+		case X::Egyptian_Hieroglyphs:   return "Egyptian_Hieroglyphs";
+		case X::Samaritan:              return "Samaritan";
+		case X::Lisu:                   return "Lisu";
+		case X::Bamum:                  return "Bamum";
+		case X::Javanese:               return "Javanese";
+		case X::Meetei_Mayek:           return "Meetei_Mayek";
+		case X::Imperial_Aramaic:       return "Imperial_Aramaic";
+		case X::Old_South_Arabian:      return "Old_South_Arabian";
+		case X::Inscriptional_Parthian: return "Inscriptional_Parthian";
+		case X::Inscriptional_Pahlavi:  return "Inscriptional_Pahlavi";
+		case X::Old_Turkic:             return "Old_Turkic";
+		case X::Kaithi:                 return "Kaithi";
+		case X::Batak:                  return "Batak";
+		case X::Brahmi:                 return "Brahmi";
+		case X::Mandaic:                return "Mandaic";
+		case X::Chakma:                 return "Chakma";
+		case X::Meroitic_Cursive:       return "Meroitic_Cursive";
+		case X::Meroitic_Hieroglyphs:   return "Meroitic_Hieroglyphs";
+		case X::Miao:                   return "Miao";
+		case X::Sharada:                return "Sharada";
+		case X::Sora_Sompeng:           return "Sora_Sompeng";
+		case X::Takri:                  return "Takri";
+		case X::Caucasian_Albanian:     return "Caucasian_Albanian";
+		case X::Bassa_Vah:              return "Bassa_Vah";
+		case X::Duployan:               return "Duployan";
+		case X::Elbasan:                return "Elbasan";
+		case X::Grantha:                return "Grantha";
+		case X::Pahawh_Hmong:           return "Pahawh_Hmong";
+		case X::Khojki:                 return "Khojki";
+		case X::Linear_A:               return "Linear_A";
+		case X::Mahajani:               return "Mahajani";
+		case X::Manichaean:             return "Manichaean";
+		case X::Mende_Kikakui:          return "Mende_Kikakui";
+		case X::Modi:                   return "Modi";
+		case X::Mro:                    return "Mro";
+		case X::Old_North_Arabian:      return "Old_North_Arabian";
+		case X::Nabataean:              return "Nabataean";
+		case X::Palmyrene:              return "Palmyrene";
+		case X::Pau_Cin_Hau:            return "Pau_Cin_Hau";
+		case X::Old_Permic:             return "Old_Permic";
+		case X::Psalter_Pahlavi:        return "Psalter_Pahlavi";
+		case X::Siddham:                return "Siddham";
+		case X::Khudawadi:              return "Khudawadi";
+		case X::Tirhuta:                return "Tirhuta";
+		case X::Warang_Citi:            return "Warang_Citi";
+		case X::Ahom:                   return "Ahom";
+		case X::Anatolian_Hieroglyphs:  return "Anatolian_Hieroglyphs";
+		case X::Hatran:                 return "Hatran";
+		case X::Multani:                return "Multani";
+		case X::Old_Hungarian:          return "Old_Hungarian";
+		case X::SignWriting:            return "SignWriting";
+		case X::Adlam:                  return "Adlam";
+		case X::Bhaiksuki:              return "Bhaiksuki";
+		case X::Marchen:                return "Marchen";
+		case X::Newa:                   return "Newa";
+		case X::Osage:                  return "Osage";
+		case X::Tangut:                 return "Tangut";
+		case X::Masaram_Gondi:          return "Masaram_Gondi";
+		case X::Nushu:                  return "Nushu";
+		case X::Soyombo:                return "Soyombo";
+		case X::Zanabazar_Square:       return "Zanabazar_Square";
+		case X::Dogra:                  return "Dogra";
+		case X::Gunjala_Gondi:          return "Gunjala_Gondi";
+		case X::Makasar:                return "Makasar";
+		case X::Medefaidrin:            return "Medefaidrin";
+		case X::Hanifi_Rohingya:        return "Hanifi_Rohingya";
+		case X::Sogdian:                return "Sogdian";
+		case X::Old_Sogdian:            return "Old_Sogdian";
+		case X::Elymaic:                return "Elymaic";
+		case X::Nandinagari:            return "Nandinagari";
+		case X::Nyiakeng_Puachue_Hmong: return "Nyiakeng_Puachue_Hmong";
+		case X::Wancho:                 return "Wancho";
+		case X::Chorasmian:             return "Chorasmian";
+		case X::Dives_Akuru:            return "Dives_Akuru";
+		case X::Khitan_Small_Script:    return "Khitan_Small_Script";
+		case X::Yezidi:                 return "Yezidi";
+		case X::Cypro_Minoan:           return "Cypro_Minoan";
+		case X::Old_Uyghur:             return "Old_Uyghur";
+		case X::Tangsa:                 return "Tangsa";
+		case X::Toto:                   return "Toto";
+		case X::Vithkuqi:               return "Vithkuqi";
+		default: return "???";
+	}
+}
+
+std::string Unicode::to_string(Unicode::SentenceBreak x) {
+	using X = Unicode::SentenceBreak;
+	switch(x) {
+		case X::Other:     return "Other";
+		case X::CR:        return "CR";
+		case X::LF:        return "LF";
+		case X::Extend:    return "Extend";
+		case X::Sep:       return "Sep";
+		case X::Format:    return "Format";
+		case X::Sp:        return "Sp";
+		case X::Lower:     return "Lower";
+		case X::Upper:     return "Upper";
+		case X::OLetter:   return "OLetter";
+		case X::Numeric:   return "Numeric";
+		case X::ATerm:     return "ATerm";
+		case X::SContinue: return "SContinue";
+		case X::STerm:     return "STerm";
+		case X::Close:     return "Close";
+		default: return "???";
+	}
+};
+
