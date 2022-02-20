@@ -60,6 +60,7 @@ def get_lib_unicode(makefile, home, bin_dir):
     add_codegen_src("line_break_property",     ["LineBreak.txt"                       ])
     add_codegen_src("script",                  ["Scripts.txt"                         ])
     add_codegen_src("simple_property",         ["PropList.txt", "emoji/emoji-data.txt"])
+    add_codegen_src("east_asian_width",        ["EastAsianWidth.txt"                    ])
 
     def add_codegen_test(name, ucd_files):
         nonlocal l, add_codegen, codegen, test
@@ -74,6 +75,7 @@ def get_lib_unicode(makefile, home, bin_dir):
     add_codegen_test("line_break_property",             ["LineBreak.txt"                       ])
     add_codegen_test("sentence_break_property",         ["auxiliary/SentenceBreakProperty.txt" ])
     add_codegen_test("simple_property",                 ["PropList.txt", "emoji/emoji-data.txt"])
+    add_codegen_test("east_asian_width",                ["PropList.txt", "emoji/emoji-data.txt"])
 
     return l
 

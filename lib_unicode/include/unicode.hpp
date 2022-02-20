@@ -593,6 +593,29 @@ namespace Unicode {
 	}
 
 
+	/***** East Asian Width *****/
+
+	// contrary to the name, all characters have an East_Asian_Width property
+
+	enum class EastAsianWidth : uint8_t {
+		A,
+		F,
+		H,
+		N,
+		Na,
+		W,
+
+		Ambiguous = A,
+		Fullwidth = F,
+		Halfwidth = H,
+		Neutral   = N,
+		Narrow    = Na,
+		Wide      = W,
+	};
+
+	EastAsianWidth get_east_asian_width(codepoint_t x);
+
+
 	/***** Scripts *****/
 
 	enum class Script : uint8_t {
@@ -858,6 +881,19 @@ namespace Unicode {
 			default: return "???";
 		}
 	};
+
+	inline std::string to_string(EastAsianWidth x) {
+		using X = EastAsianWidth;
+		switch (x) {
+			case X::A:  return "A";
+			case X::F:  return "F";
+			case X::H:  return "H";
+			case X::N:  return "N";
+			case X::Na: return "Na";
+			case X::W:  return "W";
+			default: return "?";
+		}
+	}
 
 	inline std::string to_string(GraphemeClusterBreak x) {
 		using X = GraphemeClusterBreak;
