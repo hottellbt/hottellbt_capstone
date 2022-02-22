@@ -63,3 +63,4 @@ void cleanup() {
 	Terminal::disable_alt_buffer();
 	Terminal::show_cursor();
 }
+

@@ -75,7 +75,7 @@ def get_lib_unicode(makefile, home, bin_dir):
     add_codegen_test("line_break_property",             ["LineBreak.txt"                       ])
     add_codegen_test("sentence_break_property",         ["auxiliary/SentenceBreakProperty.txt" ])
     add_codegen_test("simple_property",                 ["PropList.txt", "emoji/emoji-data.txt"])
-    add_codegen_test("east_asian_width",                ["PropList.txt", "emoji/emoji-data.txt"])
+    add_codegen_test("east_asian_width",                ["EastAsianWidth.txt"                  ])
 
     return l
 

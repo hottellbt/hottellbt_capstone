@@ -70,6 +70,9 @@ void Demo::event(const Terminal::Event &event) {
 			}
 			draw();
 			break;
+
+		default:
+			break;
 	}
 }
 

@@ -1,4 +1,5 @@
 #include "components.hpp"
+#include "utf8.hpp"
 #include "terminal.hpp"
 #include "demo.hpp"
 
