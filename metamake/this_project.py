@@ -112,7 +112,11 @@ def get_main_project(makefile, home, bin_dir):
     proj.add_subproject(lib_unicode)
     proj.add_subproject(lib_capstone)
 
-    proj.add_source_file(os.path.join(home, "src", "main.cpp"))
+    for name in [
+            "main",
+            "demo",
+            "list"]:
+        proj.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
     return proj
 
