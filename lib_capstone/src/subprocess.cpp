@@ -9,7 +9,7 @@ using Subprocesses::subprocess_error;
 
 void Subprocesses::run(
 		const char* path,
-		const char* args) {
+		char* const* argv) {
 
 	if (!pipe) {
 		throw subprocess_error("pipe");
@@ -28,7 +28,13 @@ void Subprocesses::run(
 	// the exec replaces the current process image
 	// i.e. we will never return on success. this is effectively exit()
 
-	execl(path, args);
+	execv(path, argv);
+	throw subprocess_error("execv");
 
 	// exec above failed
+}
+
+void Subprocesses::open_editor() {
+	char *argv[1] { (char*) nullptr }; 
+	run("/usr/bin/vim", argv);
 }

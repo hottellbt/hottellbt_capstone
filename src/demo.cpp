@@ -1,6 +1,7 @@
 #include "demo.hpp"
 #include "unicode.hpp"
 #include "components.hpp"
+#include "subprocess.hpp"
 
 int Demo::get_terminal_width(Unicode::codepoint_t cp) {
 	using X = Unicode::EastAsianWidth;
@@ -65,6 +66,9 @@ void Demo::event(const Terminal::Event &event) {
 						list.set_selection_index(list.get_num_options() - 1);
 						break;
 					case 'l':
+						if (list.get_selection_index() == 0) {
+							Subprocesses::open_editor();
+						}
 						break;
 				}
 			}

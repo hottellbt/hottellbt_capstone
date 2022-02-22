@@ -10,7 +10,9 @@ namespace Subprocesses {
 			subprocess_error(const std::string &msg) : runtime_error(msg) {}
 	};
 
-	void run(const char *path, const char *arg);
+	void run(const char *path, char* const* argv);
+
+	void open_editor();
 
 }
 
