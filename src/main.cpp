@@ -10,11 +10,9 @@
 bool is_set_up = false;
 
 int main();
-void setup();
-void cleanup();
 
 int main() {
-	setup();
+	Demo::setup_terminal();
 
 	try {
 
@@ -30,7 +28,7 @@ int main() {
 		}
 
 	} catch (const std::exception& e) {
-		cleanup();
+		Demo::cleanup_terminal();
 		std::cerr << "Uncaught exception: " << e.what() << std::endl;
 		if (errno != 0) {
 			std::cerr << "errno " << std::to_string(errno) << ": "
@@ -39,11 +37,11 @@ int main() {
 		return 128;
 	}
 
-	cleanup();
+	Demo::cleanup_terminal();
 	return 0;
 }
 
-void setup() {
+void Demo::setup_terminal() {
 	if (is_set_up) return;
 	is_set_up = true;
 
@@ -54,7 +52,7 @@ void setup() {
 	Terminal::set_raw(true);
 }
 
-void cleanup() {
+void Demo::cleanup_terminal() {
 	if (!is_set_up) return;
 	is_set_up = false;
 

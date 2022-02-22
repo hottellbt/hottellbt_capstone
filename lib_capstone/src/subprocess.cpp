@@ -1,6 +1,7 @@
 #include "subprocess.hpp"
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstdio>
@@ -19,7 +20,10 @@ void Subprocesses::run(
 
 	if ((pid = fork()) == -1) {
 		throw subprocess_error("fork");
-	} else if (pid == 0) {
+	} else if (pid != 0) {
+		int status;
+		int options = 0;
+		waitpid(pid, &status, options);
 		return;
 	}
 

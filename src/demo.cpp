@@ -19,6 +19,10 @@ int Demo::get_terminal_width(Unicode::codepoint_t cp) {
 List list;
 bool running = true;
 
+void on_wake_up() {
+	list.set_needs_redraw();
+}
+
 void on_resize() {
 	int w, h;
 	Terminal::get_size(w, h);
@@ -67,7 +71,10 @@ void Demo::event(const Terminal::Event &event) {
 						break;
 					case 'l':
 						if (list.get_selection_index() == 0) {
+							Demo::cleanup_terminal();
 							Subprocesses::open_editor();
+							Demo::setup_terminal();
+							on_wake_up();
 						}
 						break;
 				}
