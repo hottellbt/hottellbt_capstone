@@ -1,6 +1,8 @@
 #ifndef INCLUDED_COMPONENTS_HPP
 #define INCLUDED_COMPONENTS_HPP
 
+#include "unicode.hpp"
+
 struct Boundary {
 	unsigned int x;
 	unsigned int y;
