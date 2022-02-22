@@ -12,10 +12,6 @@ void Subprocesses::run(
 		const char* path,
 		char* const* argv) {
 
-	if (!pipe) {
-		throw subprocess_error("pipe");
-	}
-
 	pid_t pid;
 
 	if ((pid = fork()) == -1) {
