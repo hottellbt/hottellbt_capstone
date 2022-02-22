@@ -75,6 +75,7 @@ Unicode::GraphemeClusterBreak Unicode::get_grapheme_cluster_break(codepoint_t co
 		case HST::T:   return X::T;
 		case HST::LV:  return X::LV;
 		case HST::LVT: return X::LVT;
+		default: break;
 	}
 
 	/* SpacingMark */

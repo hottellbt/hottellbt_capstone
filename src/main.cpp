@@ -146,6 +146,9 @@ void loop() {
 				}
 				draw();
 				break;
+
+			default:
+				break;
 		}
 	}
 }
