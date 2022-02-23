@@ -94,7 +94,8 @@ def get_lib_capstone(makefile, home, bin_dir,
     for name in [
             "subprocess",
             "terminal",
-            "utf8"]:
+            "utf8",
+            "os_helper"]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
