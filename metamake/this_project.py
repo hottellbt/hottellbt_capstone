@@ -45,7 +45,7 @@ def get_lib_unicode(makefile, home, bin_dir):
 
             makefile.set_recipe(
                     ucd_file_full,
-                    f"mkdir -p '{ucd_file_dir}' && cd '{ucd_file_dir}' && wget 'https://www.unicode.org/Public/UCD/latest/ucd/{ucd_file}'")
+                    f"[ -f '{ucd_file_full}' ] || (mkdir -p '{ucd_file_dir}' && cd '{ucd_file_dir}' && wget 'https://www.unicode.org/Public/UCD/latest/ucd/{ucd_file}')")
 
     def add_codegen_src(name, ucd_files):
         nonlocal l, add_codegen, codegen, src
