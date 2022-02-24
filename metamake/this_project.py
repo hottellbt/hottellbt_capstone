@@ -92,7 +92,6 @@ def get_lib_capstone(makefile, home, bin_dir,
     test = os.path.join(home,  "test")
 
     for name in [
-            "subprocess",
             "terminal",
             "utf8",
             "os_helper"]:

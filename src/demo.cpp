@@ -1,7 +1,7 @@
 #include "demo.hpp"
 #include "unicode.hpp"
 #include "components.hpp"
-#include "subprocess.hpp"
+#include "os_helper.hpp"
 
 int Demo::get_terminal_width(Unicode::codepoint_t cp) {
 	using X = Unicode::EastAsianWidth;
@@ -72,7 +72,7 @@ void Demo::event(const Terminal::Event &event) {
 					case 'l':
 						if (list.get_selection_index() == 0) {
 							Demo::cleanup_terminal();
-							Subprocesses::open_editor();
+							OS::Subprocess::open_editor();
 							Demo::setup_terminal();
 							on_wake_up();
 						}
