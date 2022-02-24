@@ -22,7 +22,7 @@ namespace OS {
 
 		void run(const char *path, char* const* argv);
 
-		void open_editor();
+		void open_editor(std::filesystem::path file);
 
 	}
 };

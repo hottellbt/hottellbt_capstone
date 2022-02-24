@@ -72,7 +72,7 @@ void Demo::event(const Terminal::Event &event) {
 					case 'l':
 						if (list.get_selection_index() == 0) {
 							Demo::cleanup_terminal();
-							OS::Subprocess::open_editor();
+							OS::Subprocess::open_editor("hello.txt");
 							Demo::setup_terminal();
 							on_wake_up();
 						}

@@ -74,7 +74,7 @@ void OS::Subprocess::run(
 	throw subprocess_error("execv");
 }
 
-void OS::Subprocess::open_editor() {
+void OS::Subprocess::open_editor(std::filesystem::path file) {
 
 	std::filesystem::path editor;
 
@@ -91,15 +91,25 @@ void OS::Subprocess::open_editor() {
 
 	if (editor_exe) {
 
-		// get the exe's path into a char* as the first arg to the process
-		const std::string editor_exe_string = (*editor_exe).string();
-		const size_t size = editor_exe_string.size();
-		char editor_exe_c_str[size + 1];
-		std::strcpy(editor_exe_c_str, editor_exe_string.c_str());
-		editor_exe_c_str[size] = 0;
+		// reusable
+		size_t size;
 
-		char *argv[2] { editor_exe_c_str, (char*) nullptr }; 
-		run(editor_exe_c_str, argv);
+		// get the exe's path into a char* as the first arg to the process
+		const std::string exe_path_string = (*editor_exe).string();
+		size = exe_path_string.size();
+		char arg0[size + 1];
+		std::strcpy(arg0, exe_path_string.c_str());
+		arg0[size] = 0;
+
+		// get the path as the second arg to the process
+		const std::string file_path_string = file.string();
+		size = file_path_string.size();
+		char arg1[size + 1];
+		std::strcpy(arg1, file_path_string.c_str());
+		arg1[size] = 0;
+
+		char *argv[3] { arg0, arg1, (char*) nullptr }; 
+		run(arg0, argv);
 
 		return;
 
