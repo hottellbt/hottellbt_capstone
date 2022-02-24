@@ -24,10 +24,14 @@ namespace OS {
 
 		void open_editor(std::filesystem::path file);
 
-		std::string open_editor_line(const char* line);
+		std::string open_editor_line(
+			const char* line,
+			const char* suffix = ".txt",
+			const char* prefix = "tmpedit");
 
 		inline std::string open_editor_line(const std::string &line) {
 			return open_editor_line(line.c_str());
+
 		}
 	}
 };

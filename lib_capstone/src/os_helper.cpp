@@ -120,62 +120,100 @@ void OS::Subprocess::open_editor(std::filesystem::path file) {
 	throw subprocess_error("editor not found: " + editor.string());
 }
 
-std::string OS::Subprocess::open_editor_line(const char* line) {
-	char tmp_buffer[L_tmpnam];
-	char *tmp_name = tmpnam(tmp_buffer);
-
-	if (tmp_name == nullptr) {
-		throw std::runtime_error("tmpnam");
-	}
-
-	// from this point onwards, we are on the hook for deleting the temp file
+std::string OS::Subprocess::open_editor_line(
+		const char* line,
+		const char* suffix,
+		const char* prefix) {
 
 	// we will put what we read into this string
 	std::string ret;
 
+	// cobble together the c-string for mkstemps
+	static const char* X6 = "XXXXXX";
+
+	const int prefix_len = std::strlen(prefix);
+	const int suffix_len = std::strlen(suffix);
+	const int tmp_buffer_len = prefix_len + suffix_len + 6;
+
+	char tmp_buffer[tmp_buffer_len + 1];
+	char* tmp_buffer_idx = tmp_buffer;
+
+	strncpy(tmp_buffer_idx, prefix, prefix_len);
+	tmp_buffer_idx += prefix_len;
+	strncpy(tmp_buffer_idx, X6, 6);
+	tmp_buffer_idx += 6;
+	strncpy(tmp_buffer_idx, suffix, suffix_len);
+
+	tmp_buffer[tmp_buffer_len] = 0;
+
+	// invoke mkstemps
+	int fd = mkstemps(tmp_buffer, suffix_len);
+	if (fd == -1) {
+		std::string msg = "mkstemps ";
+		msg += tmp_buffer;
+		throw std::runtime_error(comment_with_auto_errno(msg));
+	}
+
+	// error handling
+	bool errored = false;
+	std::string error_msg;
+
 	try {
 
-		FILE* fp = fopen(tmp_name, "w");
-		if (fp == nullptr) throw std::runtime_error("fopen w");
-		fprintf(fp, "%s", line);
-		fclose(fp);
+		// write to the file that mkstemps gave us
+		// we can use the file descriptor to make life easy
+		if (write(fd, line, strlen(line)) == -1) {
+			throw std::runtime_error(comment_with_auto_errno("write"));
+		}
 
-		open_editor(tmp_name);
+		// open the user's editor
+		OS::Subprocess::open_editor((std::string) tmp_buffer);
+
+		// now read what they wrote to the file
+		// i've found we have to use the path rather than the file descriptor
+		FILE* fp = fopen(tmp_buffer, "r");
+
+		if (fp == nullptr) {
+			throw std::runtime_error(comment_with_auto_errno((std::string) "fopen " + tmp_buffer));
+		}
 
 		static const int read_buffer_len = 128;
 		char read_buffer[read_buffer_len+1];
-
-		fp = fopen(tmp_name, "r");
-		if (fp == nullptr) throw std::runtime_error("fopen r");
 
 		while (fgets(read_buffer, read_buffer_len, fp) != nullptr) {
 			ret += read_buffer;
 		}
 
-		fclose(fp);
-
 	} catch (const std::runtime_error &e) {
 
-		if (remove(tmp_name) == 0) {
-			throw e;
+		errored = true;
+		error_msg = e.what();
+
+	}
+
+	// cleanup, even if we errored earlier
+
+	if (close(fd) == -1) {
+		if (errored) {
+			error_msg += "\n";
 		}
-
-		std::string msg = e.what();
-
-		throw std::runtime_error(comment_with_auto_errno(
-				msg + "\nALSO: Failed to delete " + tmp_name));
-
+		error_msg += comment_with_auto_errno("Failed to close file descriptor: " + std::to_string(fd));
+		errored = true;
 	}
 
-	// we succesfully read from the file, now clean up and return
-
-	if (remove(tmp_name) != 0) {
-
-		std::string msg = "Failed to delete: ";
-		msg += tmp_name;
-		throw std::runtime_error(comment_with_auto_errno(msg));
-
+	if (unlink(tmp_buffer) == -1) {
+		if (errored) {
+			error_msg += "\n";
+		}
+		error_msg += comment_with_auto_errno((std::string) "Failed to unlink: " + tmp_buffer);
+		errored = true;
 	}
 
+	// ok, if there was an error, lets throw it now
+	if (errored) {
+		throw std::runtime_error(error_msg);
+	}
+
+	// we did it :)
 	return ret;
 }
