@@ -125,18 +125,34 @@ std::string OS::Subprocess::open_editor_line(const char* line) {
 	char *tmp_name = tmpnam(tmp_buffer);
 
 	if (tmp_name == nullptr) {
-		throw std::runtime_error("tmpnam returned nullptr");
+		throw std::runtime_error("tmpnam");
 	}
 
 	// from this point onwards, we are on the hook for deleting the temp file
 
+	// we will put what we read into this string
+	std::string ret;
+
 	try {
 
 		FILE* fp = fopen(tmp_name, "w");
+		if (fp == nullptr) throw std::runtime_error("fopen w");
 		fprintf(fp, "%s", line);
 		fclose(fp);
 
 		open_editor(tmp_name);
+
+		static const int read_buffer_len = 128;
+		char read_buffer[read_buffer_len+1];
+
+		fp = fopen(tmp_name, "r");
+		if (fp == nullptr) throw std::runtime_error("fopen r");
+
+		while (fgets(read_buffer, read_buffer_len, fp) != nullptr) {
+			ret += read_buffer;
+		}
+
+		fclose(fp);
 
 	} catch (const std::runtime_error &e) {
 
@@ -151,13 +167,15 @@ std::string OS::Subprocess::open_editor_line(const char* line) {
 
 	}
 
+	// we succesfully read from the file, now clean up and return
+
 	if (remove(tmp_name) != 0) {
 
 		std::string msg = "Failed to delete: ";
 		msg += tmp_name;
-
 		throw std::runtime_error(comment_with_auto_errno(msg));
+
 	}
 
-	return "";
+	return ret;
 }

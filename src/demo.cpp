@@ -39,6 +39,7 @@ void Demo::draw() {
 }
 
 void Demo::event(const Terminal::Event &event) {
+
 	switch (event.type) {
 
 		case Terminal::EventType::EXIT:
