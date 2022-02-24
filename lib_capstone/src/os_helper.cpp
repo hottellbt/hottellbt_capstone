@@ -3,42 +3,43 @@
 #include <string>
 #include <optional>
 #include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 
-const char* OS::getenv(const char* var) {
+char* OS::getenv(const char* var) {
 	return std::getenv(var);
 }
 
-const char* find_in_path(const std::string &) {
-	const char* PATH = OS::getenv("PATH");
+std::optional<std::filesystem::path> OS::find_executable(const std::filesystem::path exe_name) {
 
-	if (PATH == nullptr) {
+	if (std::filesystem::exists(exe_name)) {
+		return exe_name;
+	}
+
+	const char* PATH_ENV = OS::getenv("PATH");
+
+	if (PATH_ENV == nullptr) {
 		return std::nullopt;
 	}
 
-	const size_t
-	char* path_dir;
-	do {
+	const size_t PATH_LEN = std::strlen(PATH_ENV);
+	char path[PATH_LEN + 1];
+	std::strcpy(path, PATH_ENV);
+	path[PATH_LEN] = 0;
 
-		path_dir = strtok(PATH, ":");
+	char* path_dir = strtok(path, ":");
 
-	} while (path_dir != nullptr);
-}
+	while (path_dir != nullptr) {
 
-bool OS::Path::exists(const char *path) {
-	return access(path, F_OK) == 0;
-}
+		auto guess = path_dir / exe_name;
 
-bool OS::Path::access(
-		const char *path,
-		const bool read,
-		const bool write,
-		const bool execute) {
+		if (std::filesystem::exists(guess)) {
+			return guess;
+		}
 
-	int amode;
-	if (read)    flag |= R_OK;
-	if (write)   flag |= W_OK;
-	if (execute) flag |= X_OK;
-	return access(path) == 0;
+		path_dir = strtok(nullptr, ":");
+	}
+
+	return std::nullopt;
 }
 
