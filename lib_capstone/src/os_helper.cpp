@@ -1,4 +1,5 @@
 #include "os_helper.hpp"
+#include "except_helper.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -6,6 +7,7 @@
 
 #include <string>
 #include <optional>
+#include <stdexcept>
 
 #include <cstdio>
 #include <cstdlib>
@@ -116,4 +118,46 @@ void OS::Subprocess::open_editor(std::filesystem::path file) {
 	}
 
 	throw subprocess_error("editor not found: " + editor.string());
+}
+
+std::string OS::Subprocess::open_editor_line(const char* line) {
+	char tmp_buffer[L_tmpnam];
+	char *tmp_name = tmpnam(tmp_buffer);
+
+	if (tmp_name == nullptr) {
+		throw std::runtime_error("tmpnam returned nullptr");
+	}
+
+	// from this point onwards, we are on the hook for deleting the temp file
+
+	try {
+
+		FILE* fp = fopen(tmp_name, "w");
+		fprintf(fp, "%s", line);
+		fclose(fp);
+
+		open_editor(tmp_name);
+
+	} catch (const std::runtime_error &e) {
+
+		if (remove(tmp_name) == 0) {
+			throw e;
+		}
+
+		std::string msg = e.what();
+
+		throw std::runtime_error(comment_with_auto_errno(
+				msg + "\nALSO: Failed to delete " + tmp_name));
+
+	}
+
+	if (remove(tmp_name) != 0) {
+
+		std::string msg = "Failed to delete: ";
+		msg += tmp_name;
+
+		throw std::runtime_error(comment_with_auto_errno(msg));
+	}
+
+	return "";
 }
