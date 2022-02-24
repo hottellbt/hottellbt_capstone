@@ -19,6 +19,9 @@ int Demo::get_terminal_width(Unicode::codepoint_t cp) {
 List list;
 bool running = true;
 
+std::string hack_result = "open the editor";
+int hack_result_x, hack_result_y;
+
 void on_wake_up() {
 	list.set_needs_redraw();
 }
@@ -26,7 +29,9 @@ void on_wake_up() {
 void on_resize() {
 	int w, h;
 	Terminal::get_size(w, h);
-	list.set_bounds({0, 0, w, h});
+	list.set_bounds({0, 0, w, h - 3});
+	
+	hack_result_x = 1, hack_result_y = h - 2;
 }
 
 void Demo::init() {
@@ -36,6 +41,8 @@ void Demo::init() {
 void Demo::draw() {
 	list.quick_draw();
 	Terminal::flush();
+
+	Terminal::mvaddraw(hack_result_x, hack_result_y, hack_result);
 }
 
 void Demo::event(const Terminal::Event &event) {
@@ -73,7 +80,7 @@ void Demo::event(const Terminal::Event &event) {
 					case 'l':
 						if (list.get_selection_index() == 0) {
 							Demo::cleanup_terminal();
-							OS::Subprocess::open_editor_line("this is temporary");
+							hack_result = OS::Subprocess::open_editor_line(hack_result);
 							Demo::setup_terminal();
 							on_wake_up();
 						}

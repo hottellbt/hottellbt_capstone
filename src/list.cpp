@@ -92,16 +92,13 @@ void List::do_quick_draw() {
 }
 
 int List::get_num_options() {
-	return 5;
+	return 2;
 }
 
 Unicode::string_t List::get_option(int idx) {
 	switch (idx) {
 		case 0: return UTF8::decode("Open Editor");
-		case 1: return UTF8::decode("c1 45");
-		case 2: return UTF8::decode("c2 abc 123");
-		case 3: return UTF8::decode("01234567890123456789");
-		case 4: return UTF8::decode("0123");
+		case 1: return UTF8::decode("Do nothing");
 	}
 	throw std::runtime_error("out of bounds");
 }
