@@ -29,9 +29,9 @@ void on_wake_up() {
 void on_resize() {
 	int w, h;
 	Terminal::get_size(w, h);
-	list.set_bounds({0, 0, w, h - 3});
+	list.set_bounds({0, 0, w, 2});
 	
-	hack_result_x = 1, hack_result_y = h - 2;
+	hack_result_x = 0, hack_result_y = 2;
 }
 
 void Demo::init() {
@@ -40,9 +40,12 @@ void Demo::init() {
 
 void Demo::draw() {
 	list.quick_draw();
-	Terminal::flush();
 
+	Terminal::set_fg(Terminal::Color16::BRIGHT_BLACK);
 	Terminal::mvaddraw(hack_result_x, hack_result_y, hack_result);
+	Terminal::unset_fg();
+
+	Terminal::flush();
 }
 
 void Demo::event(const Terminal::Event &event) {
@@ -83,6 +86,8 @@ void Demo::event(const Terminal::Event &event) {
 							hack_result = OS::Subprocess::open_editor_line(hack_result);
 							Demo::setup_terminal();
 							on_wake_up();
+						} else if (list.get_selection_index() == 1) {
+							running = false;
 						}
 						break;
 				}
