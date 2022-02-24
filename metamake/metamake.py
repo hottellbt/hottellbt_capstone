@@ -293,7 +293,7 @@ class CxxProject:
         if makefile.add_flag(self.flag):
             return
 
-        default_cxx_compile_flags_list = []
+        default_cxx_compile_flags_list = [ "-std=c++17" ]
         for x in self.get_all_include_dirs():
             default_cxx_compile_flags_list.append(f"-I{x}")
         default_cxx_compile_flags = " ".join(default_cxx_compile_flags_list)
