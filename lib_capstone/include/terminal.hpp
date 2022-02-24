@@ -89,8 +89,6 @@ namespace Terminal {
 
 	// curses-like
 
-	void mv_home(); // equivalent to mv(0, 0)
-
 	void mv(int col, int row);
 
 	void addstr(const Unicode::string_t &str);
@@ -214,15 +212,16 @@ namespace Terminal {
 	inline void addraw(char c)                 { std::cout << c; }
 
 	inline void mv(int col, int row) {
+		if (col == 0 && row == 0) {
+			addraw("\x1b[H");
+			return;
+		}
+
 		addraw("\x1b[");
 		addraw(std::to_string(row + 1));
 		addraw(';');
 		addraw(std::to_string(col + 1));
 		addraw('H');
-	}
-
-	inline void mv_home() {
-		addraw("\x1b[H");
 	}
 
 	inline void addstr(const Unicode::string_t &s) {

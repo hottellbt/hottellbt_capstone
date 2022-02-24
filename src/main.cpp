@@ -48,7 +48,7 @@ void Demo::setup_terminal() {
 	Terminal::enable_alt_buffer();
 	Terminal::hide_cursor();
 	Terminal::clear();
-	Terminal::mv_home();
+	Terminal::mv(0, 0);
 	Terminal::set_raw(true);
 }
 
