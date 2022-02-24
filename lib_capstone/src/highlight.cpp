@@ -1,4 +1,4 @@
-#include "highlighting.hpp"
+#include "highlight.hpp"
 #include "terminal.hpp"
 
 #include <stdexcept>
@@ -30,7 +30,7 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Highlighting::Color> Highlighting::color_from_string(const std::string &str) {
+std::optional<Highlight::Color> Highlight::color_from_string(const std::string &str) {
 	auto lookup = aliases.find(str);
 	if (lookup != aliases.end()) { return Color(lookup->second); }
 

@@ -1,12 +1,12 @@
-#ifndef INCLUDED_HIGHLIGHTING_HPP
-#define INCLUDED_HIGHLIGHTING_HPP
+#ifndef INCLUDED_HIGHLIGHT_HPP
+#define INCLUDED_HIGHLIGHT_HPP
 
 #include "terminal.hpp"
 
 #include <cstdint>
 #include <optional>
 
-namespace Highlighting {
+namespace Highlight {
 
 	enum class ColorType : uint8_t {
 		USE_DEFAULT,
@@ -26,30 +26,30 @@ namespace Highlighting {
 				color_type(ColorType::COLOR_RGB),
 				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
 
-			void apply_to_terminal_fg(Terminal::AbstractTerminal *term) const {
+			void apply_to_terminal_fg() const {
 				switch (this->color_type) {
 					case ColorType::USE_DEFAULT:
-						term->unset_fg();
+						Terminal::unset_fg();
 						break;
 					case ColorType::COLOR_256:
-						term->set_fg(color_256);
+						Terminal::set_fg(color_256);
 						break;
 					case ColorType::COLOR_RGB:
-						term->set_fg(color_rgb_r, color_rgb_g, color_rgb_b);
+						Terminal::set_fg(color_rgb_r, color_rgb_g, color_rgb_b);
 						break;
 				}
 			}
 
-			void apply_to_terminal_bg(Terminal::AbstractTerminal *term) const {
+			void apply_to_terminal_bg() const {
 				switch (this->color_type) {
 					case ColorType::USE_DEFAULT:
-						term->unset_bg();
+						Terminal::unset_bg();
 						break;
 					case ColorType::COLOR_256:
-						term->set_bg(color_256);
+						Terminal::set_bg(color_256);
 						break;
 					case ColorType::COLOR_RGB:
-						term->set_bg(color_rgb_r, color_rgb_g, color_rgb_b);
+						Terminal::set_bg(color_rgb_r, color_rgb_g, color_rgb_b);
 						break;
 				}
 			}
@@ -78,9 +78,9 @@ namespace Highlighting {
 					const std::optional<Color> &bg) :
 				fg(fg), bg(bg) {}
 
-			void apply_to_terminal(Terminal::AbstractTerminal *term) const {
-				if (fg) { fg->apply_to_terminal_fg(term); }
-				if (bg) { bg->apply_to_terminal_bg(term); }
+			void apply_to_terminal() const {
+				if (fg) { fg->apply_to_terminal_fg(); }
+				if (bg) { bg->apply_to_terminal_bg(); }
 			}
 
 			void imprint(const Highlight &hi) {
