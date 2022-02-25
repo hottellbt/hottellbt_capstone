@@ -28,6 +28,31 @@ namespace Terminal {
 		constexpr uint8_t BRIGHT_WHITE   = 15;
 	};
 
+	enum class ColorType : uint8_t {
+		USE_DEFAULT,
+		COLOR_256,
+		COLOR_RGB
+	};
+
+	class Color {
+		public:
+			Color() :
+				color_type(ColorType::USE_DEFAULT) {}
+
+			Color(uint8_t color_256) :
+				color_type(ColorType::COLOR_256), color_256(color_256) {}
+
+			Color(uint8_t r, uint8_t g, uint8_t b) :
+				color_type(ColorType::COLOR_RGB),
+				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
+
+			ColorType color_type;
+			uint8_t color_256;
+			uint8_t color_rgb_r;
+			uint8_t color_rgb_g;
+			uint8_t color_rgb_b;
+	};
+
 	enum class EventType : uint8_t {
 		NONE,   // timeout waiting for next event, nothing happened, etc
 		EXIT,   // user requested to exit/terminate gracefully
@@ -58,6 +83,34 @@ namespace Terminal {
 	void unset_fg();
 	void unset_bg();
 	void unset_bg_fg();
+
+	inline void set_fg(const Color &c) {
+		switch (c.color_type) {
+			case ColorType::USE_DEFAULT:
+				Terminal::unset_fg();
+				break;
+			case ColorType::COLOR_256:
+				Terminal::set_fg(c.color_256);
+				break;
+			case ColorType::COLOR_RGB:
+				Terminal::set_fg(c.color_rgb_r, c.color_rgb_g, c.color_rgb_b);
+				break;
+		}
+	}
+
+	inline void set_bg(const Color &c) {
+		switch (c.color_type) {
+			case ColorType::USE_DEFAULT:
+				Terminal::unset_bg();
+				break;
+			case ColorType::COLOR_256:
+				Terminal::set_bg(c.color_256);
+				break;
+			case ColorType::COLOR_RGB:
+				Terminal::set_bg(c.color_rgb_r, c.color_rgb_g, c.color_rgb_b);
+				break;
+		}
+	}
 
 	void set_bold();
 	void set_faint();

@@ -22,7 +22,6 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"brightmagenta", Terminal::Color16::BRIGHT_MAGENTA},
 	{"brightcyan",    Terminal::Color16::BRIGHT_CYAN   },
 	{"brightwhite",   Terminal::Color16::BRIGHT_WHITE  },
-
 	// Vim uses lightgray, lightgrey, gray, and grey as synonyms
 	{"gray",          Terminal::Color16::BRIGHT_BLACK  },
 	{"grey",          Terminal::Color16::BRIGHT_BLACK  },
@@ -30,9 +29,9 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Highlight::Color> Highlight::color_from_string(const std::string &str) {
+std::optional<Terminal::Color> Highlight::color_from_string(const std::string &str) {
 	auto lookup = aliases.find(str);
-	if (lookup != aliases.end()) { return Color(lookup->second); }
+	if (lookup != aliases.end()) { return Terminal::Color(lookup->second); }
 
 	const size_t str_size = str.size();
 
@@ -47,7 +46,7 @@ std::optional<Highlight::Color> Highlight::color_from_string(const std::string &
 			unsigned long value = stoul(str, &idx, 10);
 
 			if (value <= 255 && idx == str_size) {
-				return Color((uint8_t) value);
+				return Terminal::Color((uint8_t) value);
 			}
 		} catch (const std::invalid_argument &e) {}
 	}
@@ -64,7 +63,7 @@ std::optional<Highlight::Color> Highlight::color_from_string(const std::string &
 				uint8_t r = (value >> 16) & 0xFF;
 				uint8_t g = (value >>  8) & 0xFF;
 				uint8_t b = (value      ) & 0xFF;
-				return Color(r, g, b);
+				return Terminal::Color(r, g, b);
 			}
 		} catch (const std::invalid_argument &e) {}
 	}
