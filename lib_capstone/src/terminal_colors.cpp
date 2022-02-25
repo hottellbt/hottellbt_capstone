@@ -29,7 +29,7 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Terminal::Color> Highlight::color_from_string(const std::string &str) {
+std::optional<Terminal::Color> Terminal::Color::from_string(const std::string &str) {
 	auto lookup = aliases.find(str);
 	if (lookup != aliases.end()) { return Terminal::Color(lookup->second); }
 

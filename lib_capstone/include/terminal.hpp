@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <optional>
 
 #include "unicode.hpp"
 
@@ -45,6 +46,8 @@ namespace Terminal {
 			Color(uint8_t r, uint8_t g, uint8_t b) :
 				color_type(ColorType::COLOR_RGB),
 				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
+
+			static std::optional<Color> from_string(const std::string&);
 
 			ColorType color_type;
 			uint8_t color_256;

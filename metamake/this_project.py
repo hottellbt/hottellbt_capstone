@@ -95,7 +95,7 @@ def get_lib_capstone(makefile, home, bin_dir,
             "terminal",
             "utf8",
             "os_helper",
-            "highlight"]:
+            "terminal_colors"]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [

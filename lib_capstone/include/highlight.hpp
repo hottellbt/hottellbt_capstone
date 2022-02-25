@@ -8,8 +8,6 @@
 
 namespace Highlight {
 
-	std::optional<Terminal::Color> color_from_string(const std::string &str);
-
 	class Highlight {
 		public:
 			Highlight() {}
@@ -17,7 +15,8 @@ namespace Highlight {
 			Highlight(
 					const std::string &fg_str,
 					const std::string &bg_str) :
-				fg(color_from_string(fg_str)), bg(color_from_string(bg_str)) {}
+				fg(Terminal::Color::from_string(fg_str)),
+				bg(Terminal::Color::from_string(bg_str)) {}
 			
 			Highlight(
 					const std::optional<Terminal::Color> &fg,
