@@ -92,14 +92,18 @@ def get_lib_capstone(makefile, home, bin_dir,
     test = os.path.join(home,  "test")
 
     for name in [
+            "runtime_commands",
             "terminal",
             "utf8",
             "os_helper",
-            "highlight"]:
+            "highlight"
+            ]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
-            "utf8"]:
+            "runtime_commands",
+            "utf8"
+            ]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 
     return lib
