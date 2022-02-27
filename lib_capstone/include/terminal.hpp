@@ -135,7 +135,7 @@ namespace Terminal {
 #include <iostream>
 #include <functional>
 
-#include "utf8.hpp"
+#include "encoding.hpp"
 
 namespace Terminal {
 
@@ -225,7 +225,7 @@ namespace Terminal {
 	}
 
 	inline void addstr(const Unicode::string_t &s) {
-		addraw(UTF8::encode(s));
+		addraw(Encoding::UTF8::encode(s));
 	}
 
 };

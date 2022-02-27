@@ -42,7 +42,7 @@ void signal_handler(int signal) {
 void Terminal::next_event(Terminal::Event &event) {
 	using Terminal::EventType;
 
-	UTF8::BufferedDecoder decoder;
+	Encoding::UTF8::UTF8BufferedDecoder decoder;
 
 	int bytes_read;
 

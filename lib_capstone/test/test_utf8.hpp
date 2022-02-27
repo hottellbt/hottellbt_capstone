@@ -1,15 +1,15 @@
 #include <cxxtest/TestSuite.h>
 
 #include "unicode.hpp"
-#include "utf8.hpp"
+#include "encoding.hpp"
 
 class UTF8TestSuite : public CxxTest::TestSuite {
 	public:
 		bool check_decode_encode(
 				const std::string &input) {
 
-			const auto decoded = UTF8::decode(input);
-			const auto actual = UTF8::encode(decoded);
+			const auto decoded = Encoding::UTF8::decode(input);
+			const auto actual = Encoding::UTF8::encode(decoded);
 
 			if (input != actual) {
 				TS_FAIL("encoded != decoded, input=" + input + " actual=" + actual);
@@ -19,7 +19,7 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 			return true;
 		}
 
-		void test_encoding(void) {
+		void test_utf8(void) {
 			check_decode_encode("");
 
 			check_decode_encode("Lorem ipsum dolor sit amet,");

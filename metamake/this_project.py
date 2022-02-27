@@ -93,6 +93,7 @@ def get_lib_capstone(makefile, home, bin_dir,
 
     for name in [
             "terminal",
+            "encoding",
             "utf8",
             "os_helper",
             "highlight"]:
