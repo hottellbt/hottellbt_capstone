@@ -95,12 +95,13 @@ def get_lib_capstone(makefile, home, bin_dir,
             "terminal",
             "encoding",
             "utf8",
+            "ucs2",
             "os_helper",
             "highlight"]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
-            "utf8"]:
+            "encodings"]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 
     return lib

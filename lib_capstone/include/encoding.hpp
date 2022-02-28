@@ -51,9 +51,7 @@ namespace Encoding {
 		class UTF8BufferedDecoder : public BufferedDecoder {
 			public:
 				Encoding get_encoding() const noexcept override { return Encoding::UTF8; }
-
 				Unicode::string_t decode(const char *bytes, const size_t bytes_len) override;
-
 				bool can_end() override { return codepoint_pos == 0; }
 
 			private:
@@ -62,25 +60,55 @@ namespace Encoding {
 				uint_fast8_t codepoint_len = 0;
 		};
 
-		inline Unicode::string_t decode(const std::string &s) {
-			UTF8BufferedDecoder bd;
-			auto ret = bd.decode(s.c_str(), s.size());
-			return ret;
-		}
+		std::string encode(const Unicode::string_t &s);
+
+	};
+
+	namespace UCS2 {
+
+		class UCS2BufferedDecoder : public BufferedDecoder {
+			public:
+				Encoding get_encoding() const noexcept override { return Encoding::UCS2; }
+				Unicode::string_t decode(const char *bytes, const size_t bytes_len) override;
+				bool can_end() override { return !has_saved_byte; }
+			private:
+				bool has_saved_byte = false;
+				char saved_byte;
+		};
 
 		std::string encode(const Unicode::string_t &s);
 
 	};
 
 	inline std::unique_ptr<BufferedDecoder> get_decoder(Encoding e) {
-		switch(e) {
+		switch (e) {
 
 			case Encoding::UTF8: return std::make_unique<UTF8::UTF8BufferedDecoder>();
+			case Encoding::UCS2: return std::make_unique<UCS2::UCS2BufferedDecoder>();
 
 			default: break;
 		}
 		throw std::runtime_error((std::string) "Not supported: " + to_string(e));
 	}
+
+	inline Unicode::string_t decode(const Encoding e, const char* bytes, const size_t num_bytes) {
+		auto decoder = get_decoder(e);
+		auto ret = decoder->decode(bytes, num_bytes);
+		decoder->end();
+		return ret;
+	}
+
+	inline std::string encode(const Encoding e, const Unicode::string_t &s) {
+		switch (e) {
+
+			case Encoding::UTF8: return UTF8::encode(s);
+			case Encoding::UCS2: return UCS2::encode(s);
+
+			default: break;
+		}
+		throw std::runtime_error((std::string) "Not supported: " + to_string(e));
+	}
+
 }
 
 #endif

@@ -97,8 +97,8 @@ int List::get_num_options() {
 
 Unicode::string_t List::get_option(int idx) {
 	switch (idx) {
-		case 0: return Encoding::UTF8::decode("Open Editor");
-		case 1: return Encoding::UTF8::decode("Exit");
+		case 0: return Encoding::decode(Encoding::Encoding::UTF8, "Open Editor");
+		case 1: return Encoding::decode(Encoding::Encoding::UTF8, "Exit");
 	}
 	throw std::runtime_error("out of bounds");
 }
