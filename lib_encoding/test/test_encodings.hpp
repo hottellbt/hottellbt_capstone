@@ -117,6 +117,12 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 				s[1] = i;
 				check_decode(e, s, 2, (Unicode::codepoint_t) i);
 			}
+
+			char s[2];
+			s[0] = 0xFF;
+			s[1] = 0xFF;
+			check_decode(e, s, 2, (Unicode::codepoint_t) 0xFFFF);
+			smoke_test(e, s, 2);
 		}
 };
 

@@ -23,7 +23,11 @@ Unicode::string_t Encoding::UCS2::UCS2BufferedDecoder::decode(
 		bytes[bytes_pos++] = input[input_pos];
 
 		if (bytes_pos == 2) {
-			ret.push_back((bytes[0] << 8) | bytes[1]);
+			uint8_t b1 = bytes[0];
+			uint8_t b2 = bytes[1];
+			Unicode::codepoint_t cp = (b1 << 8) | b2;
+
+			ret.push_back(cp);
 			bytes_pos = 0;
 		}
 	}
@@ -36,8 +40,6 @@ Unicode::string_t Encoding::UCS2::UCS2BufferedDecoder::decode(
 	return ret;
 }
 
-#include <iostream>
-
 std::string Encoding::UCS2::encode(const Unicode::string_t &s) {
 	std::string ret;
 	ret.reserve(s.size() * 2);
@@ -49,7 +51,6 @@ std::string Encoding::UCS2::encode(const Unicode::string_t &s) {
 			throw encoding_error("UCS-2: Not supported: " + Unicode::to_string(cp));
 		}
 
-		std::cerr << Unicode::to_string(cp) << std::endl;
 		ret.push_back((cp >> 8));
 		ret.push_back((cp & 0xFF));
 	}
