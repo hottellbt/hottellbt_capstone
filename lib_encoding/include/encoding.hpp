@@ -109,6 +109,9 @@ namespace Encoding {
 		throw std::runtime_error((std::string) "Not supported: " + to_string(e));
 	}
 
+	inline Unicode::string_t decode_literal(const std::string &s) {
+		return decode(Encoding::UTF8, s.c_str(), s.size());
+	}
 }
 
 #endif
