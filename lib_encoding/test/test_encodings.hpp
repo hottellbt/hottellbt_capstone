@@ -70,8 +70,9 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 
 		void test_ascii(const Encoding::Encoding e) {
 			for (uint8_t i = 1; i < 128; i++) {
-				char s[1];
+				char s[2];
 				s[0] = i;
+				s[1] = 0;
 				smoke_test(e, s, 1);
 			}
 
