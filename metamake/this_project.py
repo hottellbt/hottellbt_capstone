@@ -121,6 +121,7 @@ def get_lib_capstone(makefile, home, bin_dir,
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
+            "color"
             ]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 

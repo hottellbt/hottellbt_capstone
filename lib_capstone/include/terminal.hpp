@@ -47,6 +47,27 @@ namespace Terminal {
 				color_type(ColorType::COLOR_RGB),
 				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
 
+			bool operator==(const Color &c) const {
+				if (color_type != c.color_type) return false;
+
+				switch (color_type) {
+
+					case ColorType::COLOR_256:
+						if (color_256 != c.color_256) return false;
+						break;
+
+					case ColorType::COLOR_RGB:
+						if (color_rgb_r != c.color_rgb_r
+								|| color_rgb_g != c.color_rgb_g
+								|| color_rgb_b != c.color_rgb_b) return false;
+						break;
+
+					default: break;
+				}
+
+				return true;
+			}
+
 			static std::optional<Color> from_string(const std::string&);
 
 			ColorType color_type;
