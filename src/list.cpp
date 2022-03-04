@@ -1,5 +1,5 @@
 #include "components.hpp"
-#include "utf8.hpp"
+#include "encoding.hpp"
 #include "terminal.hpp"
 #include "demo.hpp"
 
@@ -97,8 +97,8 @@ int List::get_num_options() {
 
 Unicode::string_t List::get_option(int idx) {
 	switch (idx) {
-		case 0: return UTF8::decode("Open Editor");
-		case 1: return UTF8::decode("Exit");
+		case 0: return Encoding::decode_literal("Open Editor");
+		case 1: return Encoding::decode_literal("Exit");
 	}
 	throw std::runtime_error("out of bounds");
 }
