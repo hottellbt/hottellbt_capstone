@@ -68,6 +68,10 @@ namespace Terminal {
 				return true;
 			}
 
+			bool operator!=(const Color &c) const {
+				return !operator==(c);
+			}
+
 			static std::optional<Color> from_string(const std::string&);
 
 			ColorType color_type;
