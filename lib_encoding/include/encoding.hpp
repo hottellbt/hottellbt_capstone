@@ -30,6 +30,8 @@ namespace Encoding {
 	class BufferedDecoder {
 		public:
 
+			virtual ~BufferedDecoder(void) {}
+
 			virtual Encoding get_encoding() const noexcept = 0;
 
 			virtual Unicode::string_t decode(const char *bytes, const size_t bytes_len) = 0;
