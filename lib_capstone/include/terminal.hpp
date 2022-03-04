@@ -75,8 +75,10 @@ namespace Terminal {
 			static std::optional<Color> from_string(const std::string&);
 
 			ColorType color_type;
-			uint8_t color_256;
-			uint8_t color_rgb_r;
+			union {
+				uint8_t color_256;
+				uint8_t color_rgb_r;
+			};
 			uint8_t color_rgb_g;
 			uint8_t color_rgb_b;
 	};
