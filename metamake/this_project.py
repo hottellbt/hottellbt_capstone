@@ -83,7 +83,7 @@ def get_lib_unicode(makefile, home, bin_dir):
 def get_lib_encoding(makefile, home, bin_dir,
         lib_unicode):
 
-    lib = CxxProject("lib_encoding", bin_dir, executable=True)
+    lib = CxxProject("lib_encoding", bin_dir)
     lib.add_subproject(lib_unicode)
 
     lib.add_include_dir(os.path.join(home, "include"))
@@ -105,7 +105,7 @@ def get_lib_encoding(makefile, home, bin_dir,
 def get_lib_capstone(makefile, home, bin_dir,
         lib_unicode, lib_encoding):
 
-    lib = CxxProject("lib_capstone", bin_dir, executable=True)
+    lib = CxxProject("lib_capstone", bin_dir)
     lib.add_subproject(lib_unicode)
     lib.add_subproject(lib_encoding)
 
