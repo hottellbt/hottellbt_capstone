@@ -80,11 +80,34 @@ def get_lib_unicode(makefile, home, bin_dir):
     return l
 
 
-def get_lib_capstone(makefile, home, bin_dir,
+def get_lib_encoding(makefile, home, bin_dir,
         lib_unicode):
 
-    lib = CxxProject("lib_capstone", bin_dir, executable=True)
+    lib = CxxProject("lib_encoding", bin_dir)
     lib.add_subproject(lib_unicode)
+
+    lib.add_include_dir(os.path.join(home, "include"))
+
+    for name in [
+            "encoding",
+            "utf8",
+            "ucs2",
+           ]:
+        lib.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
+
+    for name in [
+            "encodings"]:
+        lib.add_cxxtest_suite(os.path.join(home, "test", f"test_{name}.hpp"))
+
+    return lib
+
+
+def get_lib_capstone(makefile, home, bin_dir,
+        lib_unicode, lib_encoding):
+
+    lib = CxxProject("lib_capstone", bin_dir)
+    lib.add_subproject(lib_unicode)
+    lib.add_subproject(lib_encoding)
 
     lib.add_include_dir(os.path.join(home, "include"))
 
@@ -93,13 +116,12 @@ def get_lib_capstone(makefile, home, bin_dir,
 
     for name in [
             "terminal",
-            "utf8",
             "os_helper",
             "terminal_colors"]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
-            "utf8"]:
+            ]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 
     return lib
@@ -107,11 +129,13 @@ def get_lib_capstone(makefile, home, bin_dir,
 
 def get_main_project(makefile, home, bin_dir):
     lib_unicode = get_lib_unicode(makefile, os.path.join(home, "lib_unicode"), bin_dir)
-    lib_capstone = get_lib_capstone(makefile, os.path.join(home, "lib_capstone"), bin_dir, lib_unicode)
+    lib_encoding = get_lib_encoding(makefile, os.path.join(home, "lib_encoding"), bin_dir, lib_unicode)
+    lib_capstone = get_lib_capstone(makefile, os.path.join(home, "lib_capstone"), bin_dir, lib_unicode, lib_encoding)
 
     proj = CxxProject("hottellbt_capstone", bin_dir, executable=True)
     proj.add_subproject(lib_unicode)
     proj.add_subproject(lib_capstone)
+    proj.add_subproject(lib_encoding)
 
     for name in [
             "main",

@@ -63,7 +63,16 @@ void OS::Subprocess::run(
 	} else if (pid != 0) {
 		int status;
 		int options = 0;
-		waitpid(pid, &status, options);
+
+		int wait_ret;
+		do {
+			wait_ret = waitpid(pid, &status, options);
+		} while (wait_ret == -1 && errno == EINTR);
+
+		if (wait_ret == -1) {
+			throw new subprocess_error("waitpid");
+		}
+
 		return;
 	}
 

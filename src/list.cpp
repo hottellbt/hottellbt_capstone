@@ -1,5 +1,5 @@
 #include "components.hpp"
-#include "utf8.hpp"
+#include "encoding.hpp"
 #include "terminal.hpp"
 #include "demo.hpp"
 
@@ -44,13 +44,19 @@ Unicode::string_t normalize_string(
 	return ret;
 }
 
-void List::draw_option(int idx) {
-	const int draw_x = bounds.x;
-	const int draw_y = bounds.y + idx;
-	const int width = bounds.width;
-	const int height = bounds.height;
+void List::draw_row(int row, const Bounds& bounds) {
 
-	if (width < 1 || height < 1) {
+	auto draw_y = bounds.y + row;
+	auto draw_x = bounds.x;
+
+	if (draw_y > bounds.height) {
+		return;
+	}
+
+	// the index that this row represents
+	auto idx = row;
+
+	if (idx >= get_num_options()) {
 		return;
 	}
 
@@ -63,10 +69,10 @@ void List::draw_option(int idx) {
 
 	int option_str_width;
 	Unicode::string_t option_str = normalize_string(
-			get_option(idx), width, &option_str_width);
+			get_option(idx), bounds.width, &option_str_width);
 	Terminal::mvaddstr(draw_x, draw_y, option_str);
 
-	for (int i = option_str_width; i < width; i++) {
+	for (int i = option_str_width; i < bounds.width; i++) {
 		Terminal::addraw(' ');
 	}
 		
@@ -76,18 +82,19 @@ void List::draw_option(int idx) {
 	}
 }
 
-void List::do_full_draw() {
-	for (int i = 0; i < get_num_options(); i++) {
-		draw_option(i);
+void List::do_full_draw(const Bounds& bounds) {
+	int i = 0;
+	for (; i < bounds.height; i++) {
+		draw_row(i, bounds);
 	}
 	prior_selection_idx = selection_idx;
 }
 
-void List::do_quick_draw() {
+void List::do_quick_draw(const Bounds& bounds) {
 	if (prior_selection_idx == selection_idx) return;
 
-	draw_option(prior_selection_idx);
-	draw_option(selection_idx);
+	draw_row(prior_selection_idx, bounds);
+	draw_row(selection_idx, bounds);
 	prior_selection_idx = selection_idx;
 }
 
@@ -97,8 +104,8 @@ int List::get_num_options() {
 
 Unicode::string_t List::get_option(int idx) {
 	switch (idx) {
-		case 0: return UTF8::decode("Open Editor");
-		case 1: return UTF8::decode("Exit");
+		case 0: return Encoding::decode_literal("Open Editor");
+		case 1: return Encoding::decode_literal("Exit");
 	}
 	throw std::runtime_error("out of bounds");
 }

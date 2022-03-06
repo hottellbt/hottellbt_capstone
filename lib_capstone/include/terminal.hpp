@@ -60,7 +60,7 @@ namespace Terminal {
 		NONE,   // timeout waiting for next event, nothing happened, etc
 		EXIT,   // user requested to exit/terminate gracefully
 		TEXT,   // user typed things, and that input is ready to be processed
-		RESIZE, // SIGWINCH, terminal resized
+		RESIZE, // SIGWINCH, the terminal/window was resized by user
 	};
 
 	struct EventText {
@@ -138,7 +138,7 @@ namespace Terminal {
 
 	void flush();
 
-	void get_size(int &cols, int &rows);
+	void get_size(unsigned short &cols, unsigned short &rows);
 
 	void show_cursor();
 	void hide_cursor();
@@ -191,7 +191,7 @@ namespace Terminal {
 #include <iostream>
 #include <functional>
 
-#include "utf8.hpp"
+#include "encoding.hpp"
 
 namespace Terminal {
 
@@ -281,7 +281,7 @@ namespace Terminal {
 	}
 
 	inline void addstr(const Unicode::string_t &s) {
-		addraw(UTF8::encode(s));
+		addraw(Encoding::UTF8::encode(s));
 	}
 
 };

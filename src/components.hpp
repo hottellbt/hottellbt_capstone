@@ -3,55 +3,49 @@
 
 #include "unicode.hpp"
 
-struct Boundary {
-	unsigned int x;
-	unsigned int y;
-	unsigned int width;
-	unsigned int height;
+struct Bounds {
+	unsigned short x, y, width, height;
 
-	Boundary() : x(0), y(0), width(0), height(0) {}
-	Boundary(int x, int y, int w, int h) : x(x), y(y), width(w), height(h) {}
+	Bounds() {}
+
+	Bounds(int x, int y, int width, int height) :
+		x(x), y(y), width(width), height(height) {}
+
+	Bounds(int width, int height) :
+		x(0), y(0), width(width), height(height) {}
+
 };
 
 class Component {
 	public:
 		Component() {};
 
-		void set_needs_redraw() {
+		void set_needs_full_draw() {
 			this->needs_full_draw = true;
 		}
 
-		void set_bounds(const Boundary &bounds) {
-			this->bounds = bounds;
-			this->needs_full_draw = true;
-		}
-
-		void full_draw() {
-			do_full_draw();
+		void full_draw(const Bounds& bounds) {
+			do_full_draw(bounds);
 			this->needs_full_draw = false;
 		}
 
-		void quick_draw() {
+		void quick_draw(const Bounds& bounds) {
 			if (this->needs_full_draw) {
-				full_draw();
+				full_draw(bounds);
 				return;
 			}
-			do_quick_draw();
+			do_quick_draw(bounds);
 		}
 
 	protected:
-		virtual void do_full_draw() = 0;
-		virtual void do_quick_draw() = 0;
+		virtual void do_full_draw(const Bounds& bounds) = 0;
+		virtual void do_quick_draw(const Bounds& bounds) = 0;
 
 		bool needs_full_draw = true;
-		Boundary bounds;
 };
 
 class List : public Component {
 	public:
-		void do_full_draw();
-		void do_quick_draw();
-
 		int get_num_options();
 		Unicode::string_t get_option(int idx);
 
@@ -71,11 +65,15 @@ class List : public Component {
 			}
 		}
 
+	protected:
+		void do_full_draw(const Bounds& bounds);
+		void do_quick_draw(const Bounds& bounds);
+
 	private:
 		int prior_selection_idx = 0;
 		int selection_idx = 0;
 
-		void draw_option(int idx);
+		void draw_row(int idx, const Bounds& bounds);
 };
 
 #endif
