@@ -32,7 +32,7 @@ namespace Terminal {
 		NONE,   // timeout waiting for next event, nothing happened, etc
 		EXIT,   // user requested to exit/terminate gracefully
 		TEXT,   // user typed things, and that input is ready to be processed
-		RESIZE, // SIGWINCH, terminal resized
+		RESIZE, // SIGWINCH, the terminal/window was resized by user
 	};
 
 	struct EventText {
@@ -82,7 +82,7 @@ namespace Terminal {
 
 	void flush();
 
-	void get_size(int &cols, int &rows);
+	void get_size(unsigned short &cols, unsigned short &rows);
 
 	void show_cursor();
 	void hide_cursor();

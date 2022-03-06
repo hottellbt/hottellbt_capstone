@@ -17,8 +17,8 @@ tcflag_t nonraw_c_oflag;
 tcflag_t nonraw_c_lflag;
 tcflag_t nonraw_c_cflag;
 
-sig_atomic_t got_sigwinch = 0;
 sig_atomic_t got_sigint = 0;
+sig_atomic_t got_sigwinch = 0;
 
 constexpr size_t read_buffer_len = 1028;
 char read_buffer[read_buffer_len];
@@ -44,9 +44,8 @@ void Terminal::next_event(Terminal::Event &event) {
 
 	Encoding::UTF8::UTF8BufferedDecoder decoder;
 
-	int bytes_read;
+	int bytes_read = read(0, read_buffer, read_buffer_len);
 
-	bytes_read = read(0, read_buffer, read_buffer_len);
 	if (bytes_read > 0) {
 		auto decoded = decoder.decode(read_buffer, bytes_read);
 		if (decoded.size() > 0) {
@@ -71,7 +70,7 @@ void Terminal::next_event(Terminal::Event &event) {
 	event.type = EventType::NONE;
 }
 
-void Terminal::get_size(int &cols, int &rows) {
+void Terminal::get_size(unsigned short &cols, unsigned short &rows) {
 	if (cached_window_size_valid == 0) {
 		winsize window_size;
 		ioctl(0, TIOCGWINSZ, &window_size);

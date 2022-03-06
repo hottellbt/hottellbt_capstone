@@ -20,29 +20,20 @@ List list;
 bool running = true;
 
 std::string hack_result = "open the editor";
-int hack_result_x, hack_result_y;
-
-void on_wake_up() {
-	list.set_needs_redraw();
-}
-
-void on_resize() {
-	int w, h;
-	Terminal::get_size(w, h);
-	list.set_bounds({0, 0, w, 2});
-	
-	hack_result_x = 0, hack_result_y = 2;
-}
 
 void Demo::init() {
-	on_resize();
 }
 
 void Demo::draw() {
-	list.quick_draw();
+	Bounds bounds;
+	bounds.x = 0;
+	bounds.y = 0;
+	Terminal::get_size(bounds.width, bounds.height);
+
+	list.quick_draw(bounds);
 
 	Terminal::set_fg(Terminal::Color16::BRIGHT_BLACK);
-	Terminal::mvaddraw(hack_result_x, hack_result_y, hack_result);
+	Terminal::mvaddraw(0, 2, hack_result);
 	Terminal::unset_fg();
 
 	Terminal::flush();
@@ -57,9 +48,7 @@ void Demo::event(const Terminal::Event &event) {
 			break;
 
 		case Terminal::EventType::RESIZE:
-			Terminal::clear();
-			on_resize();
-			Demo::draw();
+			list.set_needs_full_draw();
 			break;
 
 		case Terminal::EventType::TEXT:
@@ -85,7 +74,7 @@ void Demo::event(const Terminal::Event &event) {
 							Demo::cleanup_terminal();
 							hack_result = OS::Subprocess::open_editor_line(hack_result);
 							Demo::setup_terminal();
-							on_wake_up();
+							list.set_needs_full_draw();
 						} else if (list.get_selection_index() == 1) {
 							running = false;
 						}
