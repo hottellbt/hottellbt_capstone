@@ -3,11 +3,33 @@
 
 #include <cstdint>
 #include <string>
+#include <optional>
 
 #include "unicode.hpp"
 
 
 namespace Terminal {
+
+	namespace Attribute {
+		using flags_t = uint8_t;
+		constexpr flags_t none          = 0b00000000;
+		constexpr flags_t bold          = 0b00000001;
+		constexpr flags_t underline     = 0b00000010;
+		constexpr flags_t undercurl     = 0b00000100; // falls back to underline
+		constexpr flags_t strikethrough = 0b00001000;
+		constexpr flags_t inverse       = 0b00010000; // "reverse" is a synonym
+		constexpr flags_t italic        = 0b00100000;
+		constexpr flags_t standout      = 0b01000000;
+
+		static std::optional<flags_t> from_string(const std::string&);
+
+		inline static std::optional<flags_t> from_opt_string(
+				const std::optional<const std::string>& str) {
+			if (!str) return std::nullopt;
+			return from_string(*str);
+		}
+
+	};
 
 	namespace Color16 {
 		constexpr uint8_t BLACK   = 0;
@@ -26,6 +48,66 @@ namespace Terminal {
 		constexpr uint8_t BRIGHT_MAGENTA = 13;
 		constexpr uint8_t BRIGHT_CYAN    = 14;
 		constexpr uint8_t BRIGHT_WHITE   = 15;
+	};
+
+	enum class ColorType : uint8_t {
+		USE_DEFAULT,
+		COLOR_256,
+		COLOR_RGB
+	};
+
+	class Color {
+		public:
+			Color() :
+				color_type(ColorType::USE_DEFAULT) {}
+
+			Color(uint8_t color_256) :
+				color_type(ColorType::COLOR_256), color_256(color_256) {}
+
+			Color(uint8_t r, uint8_t g, uint8_t b) :
+				color_type(ColorType::COLOR_RGB),
+				color_rgb_r(r), color_rgb_g(g), color_rgb_b(b) {}
+
+			bool operator==(const Color &c) const {
+				if (color_type != c.color_type) return false;
+
+				switch (color_type) {
+
+					case ColorType::COLOR_256:
+						if (color_256 != c.color_256) return false;
+						break;
+
+					case ColorType::COLOR_RGB:
+						if (color_rgb_r != c.color_rgb_r
+								|| color_rgb_g != c.color_rgb_g
+								|| color_rgb_b != c.color_rgb_b) return false;
+						break;
+
+					default: break;
+				}
+
+				return true;
+			}
+
+			bool operator!=(const Color &c) const {
+				return !operator==(c);
+			}
+
+			static std::optional<Color> from_string(const std::string&);
+
+			inline static std::optional<Color> from_opt_string(
+					const std::optional<const std::string>& str) {
+				if (!str) return std::nullopt;
+				return from_string(*str);
+			}
+
+			ColorType color_type;
+			union {
+				uint8_t color_256;
+				uint8_t color_rgb_r;
+			};
+			uint8_t color_rgb_g;
+			uint8_t color_rgb_b;
 	};
 
 	enum class EventType : uint8_t {
@@ -58,6 +140,34 @@ namespace Terminal {
 	void unset_fg();
 	void unset_bg();
 	void unset_bg_fg();
+
+	inline void set_fg(const Color &c) {
+		switch (c.color_type) {
+			case ColorType::USE_DEFAULT:
+				Terminal::unset_fg();
+				break;
+			case ColorType::COLOR_256:
+				Terminal::set_fg(c.color_256);
+				break;
+			case ColorType::COLOR_RGB:
+				Terminal::set_fg(c.color_rgb_r, c.color_rgb_g, c.color_rgb_b);
+				break;
+		}
+	}
+
+	inline void set_bg(const Color &c) {
+		switch (c.color_type) {
+			case ColorType::USE_DEFAULT:
+				Terminal::unset_bg();
+				break;
+			case ColorType::COLOR_256:
+				Terminal::set_bg(c.color_256);
+				break;
+			case ColorType::COLOR_RGB:
+				Terminal::set_bg(c.color_rgb_r, c.color_rgb_g, c.color_rgb_b);
+				break;
+		}
+	}
 
 	void set_bold();
 	void set_faint();

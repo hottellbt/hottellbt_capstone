@@ -56,9 +56,11 @@ void Demo::cleanup_terminal() {
 	if (!is_set_up) return;
 	is_set_up = false;
 
-	Terminal::flush();
 	Terminal::set_raw(false);
 	Terminal::disable_alt_buffer();
 	Terminal::show_cursor();
+	Terminal::unset_bg();
+	Terminal::unset_fg();
+	Terminal::flush();
 }
 

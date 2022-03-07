@@ -117,12 +117,13 @@ def get_lib_capstone(makefile, home, bin_dir,
     for name in [
             "terminal",
             "os_helper",
-            "highlight",
-            "todo"
+            "todo",
+            "terminal_colors",
             ]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
+            "color",
             ]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 
@@ -142,7 +143,7 @@ def get_main_project(makefile, home, bin_dir):
     for name in [
             "main",
             "demo",
-            "list"]:
+            ]:
         proj.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
     return proj
