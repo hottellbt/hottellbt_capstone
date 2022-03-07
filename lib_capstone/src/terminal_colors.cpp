@@ -38,13 +38,6 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Terminal::Color> Terminal::Color::from_opt_string(
-		const std::optional<const std::string> &str) {
-
-	if (!str) return std::nullopt;
-	return Terminal::Color::from_string(*str);
-}
-
 std::optional<Terminal::Color> Terminal::Color::from_string(
 		const std::string &str) {
 

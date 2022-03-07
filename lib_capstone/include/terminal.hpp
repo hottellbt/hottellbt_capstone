@@ -10,6 +10,27 @@
 
 namespace Terminal {
 
+	namespace Attribute {
+		using flags_t = uint8_t;
+		constexpr flags_t none          = 0b00000000;
+		constexpr flags_t bold          = 0b00000001;
+		constexpr flags_t underline     = 0b00000010;
+		constexpr flags_t undercurl     = 0b00000100; // falls back to underline
+		constexpr flags_t strikethrough = 0b00001000;
+		constexpr flags_t inverse       = 0b00010000; // "reverse" is a synonym
+		constexpr flags_t italic        = 0b00100000;
+		constexpr flags_t standout      = 0b01000000;
+
+		static std::optional<flags_t> from_string(const std::string&);
+
+		inline static std::optional<flags_t> from_opt_string(
+				const std::optional<const std::string>& str) {
+			if (!str) return std::nullopt;
+			return from_string(*str);
+		}
+
+	};
+
 	namespace Color16 {
 		constexpr uint8_t BLACK   = 0;
 		constexpr uint8_t RED     = 1;
@@ -72,8 +93,13 @@ namespace Terminal {
 				return !operator==(c);
 			}
 
-			static std::optional<Color> from_opt_string(const std::optional<const std::string>&);
 			static std::optional<Color> from_string(const std::string&);
+
+			inline static std::optional<Color> from_opt_string(
+					const std::optional<const std::string>& str) {
+				if (!str) return std::nullopt;
+				return from_string(*str);
+			}
 
 			ColorType color_type;
 			union {
