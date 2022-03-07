@@ -22,19 +22,38 @@ const std::map<const std::string, const uint8_t> aliases {
 	{"brightmagenta", Terminal::Color16::BRIGHT_MAGENTA},
 	{"brightcyan",    Terminal::Color16::BRIGHT_CYAN   },
 	{"brightwhite",   Terminal::Color16::BRIGHT_WHITE  },
-	// Vim uses lightgray, lightgrey, gray, and grey as synonyms
+	// vim uses light as a synonym for bright
+	{"lightblack",    Terminal::Color16::BRIGHT_BLACK  },
+	{"lightred",      Terminal::Color16::BRIGHT_RED    },
+	{"lightgreen",    Terminal::Color16::BRIGHT_GREEN  },
+	{"lightyellow",   Terminal::Color16::BRIGHT_YELLOW },
+	{"lightblue",     Terminal::Color16::BRIGHT_BLUE   },
+	{"lightmagenta",  Terminal::Color16::BRIGHT_MAGENTA},
+	{"lightcyan",     Terminal::Color16::BRIGHT_CYAN   },
+	{"lightwhite",    Terminal::Color16::BRIGHT_WHITE  },
+	// Vim uses gray/grey as a synonym for bright/light black
 	{"gray",          Terminal::Color16::BRIGHT_BLACK  },
 	{"grey",          Terminal::Color16::BRIGHT_BLACK  },
 	{"lightgray",     Terminal::Color16::BRIGHT_BLACK  },
 	{"lightgrey",     Terminal::Color16::BRIGHT_BLACK  },
 };
 
-std::optional<Terminal::Color> Terminal::Color::from_string(const std::string &str) {
+std::optional<Terminal::Color> Terminal::Color::from_opt_string(
+		const std::optional<const std::string> &str) {
+
+	if (!str) return std::nullopt;
+	return Terminal::Color::from_string(*str);
+}
+
+std::optional<Terminal::Color> Terminal::Color::from_string(
+		const std::string &str) {
+
 	auto lookup = aliases.find(str);
 	if (lookup != aliases.end()) { return Terminal::Color(lookup->second); }
 
 	const size_t str_size = str.size();
 
+	// empty string is interpreted as no value
 	if (str_size == 0) {
 		return std::nullopt;
 	}
