@@ -117,7 +117,9 @@ def get_lib_capstone(makefile, home, bin_dir,
     for name in [
             "terminal",
             "os_helper",
-            "highlight"]:
+            "highlight",
+            "todo"
+            ]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
