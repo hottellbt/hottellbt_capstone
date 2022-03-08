@@ -6,102 +6,9 @@
 #include "encoding.hpp"
 #include "terminal.hpp"
 
-Highlight::ColorScheme scheme;
-
-int Demo::get_terminal_width(Unicode::codepoint_t cp) {
-	using X = Unicode::EastAsianWidth;
-	const auto width_prop = Unicode::get_east_asian_width(cp);
-
-	switch(width_prop) {
-		case X::F:
-		case X::W:
-			return 2;
-		default:
-			return 1;
-	}
-}
-
-List list;
 bool running = true;
-
-std::string hack_result = "open the editor";
-
-void Demo::init() {
-	scheme.set_partial_highlight("Normal",     {"lightgrey", ""});
-	scheme.set_partial_highlight("StatusLine", {"blue", ""});
-
-	scheme.set_partial_highlight("listNormal", {"lightgreen", ""});
-	scheme.set_partial_highlight("listSelect", {"lightblue", ""});
-
-}
-
-void Demo::draw() {
-	Bounds bounds;
-	bounds.x = 0;
-	bounds.y = 0;
-	Terminal::get_size(bounds.width, bounds.height);
-
-	list.quick_draw(bounds);
-
-	scheme.get_highlight({"StatusLine"}).activate();
-	Terminal::mvaddraw(0, 2, hack_result);
-
-	Terminal::flush();
-}
-
-void Demo::event(const Terminal::Event &event) {
-
-	switch (event.type) {
-
-		case Terminal::EventType::EXIT:
-			running = false;
-			break;
-
-		case Terminal::EventType::RESIZE:
-			list.set_needs_full_draw();
-			break;
-
-		case Terminal::EventType::TEXT:
-			for (auto cp : event.e_text.text) {
-				switch (cp) {
-					case 'q':
-						running = false;
-						break;
-					case 'j':
-						list.move_selection_index(1);
-						break;
-					case 'k':
-						list.move_selection_index(-1);
-						break;
-					case 'g':
-						list.set_selection_index(0);
-						break;
-					case 'G':
-						list.set_selection_index(list.get_num_options() - 1);
-						break;
-					case 'l':
-						if (list.get_selection_index() == 0) {
-							Demo::cleanup_terminal();
-							hack_result = OS::Subprocess::open_editor_line(hack_result);
-							Demo::setup_terminal();
-							list.set_needs_full_draw();
-						} else if (list.get_selection_index() == 1) {
-							running = false;
-						}
-						break;
-				}
-			}
-			draw();
-			break;
-
-		default:
-			break;
-	}
-}
-
-bool Demo::is_running() {
-	return running;
-}
+Highlight::ColorScheme color_scheme;
+std::string status = "Hello world";
 
 Unicode::string_t normalize_string(
 		const Unicode::string_t &s,
@@ -144,36 +51,158 @@ Unicode::string_t normalize_string(
 	return ret;
 }
 
-void List::draw_row(int row, const Bounds& bounds) {
+template<typename T>
+class ListModel {
+	public:
+		ListModel() {}
+		virtual ~ListModel() {}
 
-	auto draw_y = bounds.y + row;
-	auto draw_x = bounds.x;
+		virtual size_t num_elements() = 0;
+		virtual T get_element(size_t idx) = 0;
 
-	if (draw_y > bounds.height) {
-		return;
-	}
+		size_t selection_index = 0;
 
-	// the index that this row represents
-	auto idx = row;
+		void scroll_up() {
+			if (selection_index > 0) {
+				selection_index--;
+			}
+		}
 
-	if (idx >= get_num_options()) {
-		return;
-	}
+		void scroll_down() {
+			if (selection_index < num_elements() - 1) {
+				selection_index++;
+			}
+		}
+		
+		void home() { selection_index = 0; }
+		void end() { selection_index = num_elements() - 1; }
+};
 
-	bool highlight = idx == selection_idx;
+class DemoListModel : public ListModel<Unicode::string_t> {
+	public:
+		size_t num_elements() { return 4; }
+
+		Unicode::string_t get_element(size_t idx) {
+			switch (idx) {
+				case 0: return Encoding::decode_literal("Dummy 1");
+				case 1: return Encoding::decode_literal("Dummy 2");
+				case 2: return Encoding::decode_literal("Dummy 3");
+				case 3: return Encoding::decode_literal("Exit");
+			}
+			throw std::runtime_error(
+					(std::string) "out of bounds: " + std::to_string(idx));
+		}
+
+};
+
+template<typename T>
+class ListView {
+	public:
+		ListView(ListModel<T> *model) :model(model) {}
+		virtual ~ListView() {}
+
+		void draw(const Rectangle& bounds) {
+			// for now we assume that every row has a height of 1
+			const unsigned short row_height = 1;
+
+			// can we skip re-drawing most rows?
+			const bool quick = !needs_redraw && bounds == last_draw_bounds;
+
+			needs_redraw = false;
+			last_draw_bounds = bounds;
+
+			const size_t max_row = model->num_elements();
+
+			unsigned short draw_y = bounds.y;
+			size_t row = 0;
+			Rectangle row_bounds;
+
+			for (;
+					draw_y < bounds.height && row < max_row;
+					row++, draw_y += row_height) {
+
+				bool do_draw = true;
+
+				if (quick) {
+					// establish if we can skip drawing this row
+					do_draw = row == last_draw_selection || row == model->selection_index;
+				}
+
+				if (do_draw) {
+					row_bounds = {
+						bounds.x,
+						draw_y,
+						bounds.width,
+						row_height
+					};
+
+					draw_row(
+							row_bounds,
+							model->get_element(row),
+							row,
+							row == model->selection_index);
+				}
+			}
+
+			last_draw_selection = model->selection_index;
+		}
+
+	protected:
+		ListModel<T>* const model;
+
+		virtual void draw_row(
+				const Rectangle& bounds,
+				const T& value,
+				size_t index,
+				bool selected) = 0;
+
+	private:
+		bool needs_redraw = true;
+		Rectangle last_draw_bounds;
+		size_t last_draw_selection;
+
+		bool needs_full_draw() {
+			return false;
+		}
+
+};
+
+class DemoListView : public ListView<Unicode::string_t> {
+	public:
+		DemoListView(ListModel<Unicode::string_t> *model) : ListView(model) {}
+
+	protected:
+		void draw_row(
+				const Rectangle& bounds,
+				const Unicode::string_t& value,
+				size_t index,
+				bool selected);
+};
+
+void DemoListView::draw_row(
+		const Rectangle& bounds,
+		const Unicode::string_t& value,
+		size_t index,
+		bool selected) {
+
+	if (bounds.is_zero()) return;
+
+	bool highlight = index == model->selection_index;
 
 	if (highlight) { 
-		scheme.get_highlight({"list", "listSelect"}).activate();
+		color_scheme.get_highlight({"list", "listSelect"}).activate();
 		Terminal::set_invert();
 		Terminal::set_bold();
 	} else {
-		scheme.get_highlight({"list", "listNormal"}).activate();
+		color_scheme.get_highlight({"list", "listNormal"}).activate();
 	}
 
 	int option_str_width;
+
 	Unicode::string_t option_str = normalize_string(
-			get_option(idx), bounds.width, &option_str_width);
-	Terminal::mvaddstr(draw_x, draw_y, option_str);
+			value, bounds.width, &option_str_width);
+
+	Terminal::mvaddstr(bounds.x, bounds.y, option_str);
 
 	for (int i = option_str_width; i < bounds.width; i++) {
 		Terminal::addraw(' ');
@@ -185,31 +214,95 @@ void List::draw_row(int row, const Bounds& bounds) {
 	}
 }
 
-void List::do_full_draw(const Bounds& bounds) {
-	int i = 0;
-	for (; i < bounds.height; i++) {
-		draw_row(i, bounds);
+int Demo::get_terminal_width(Unicode::codepoint_t cp) {
+	using X = Unicode::EastAsianWidth;
+	const auto width_prop = Unicode::get_east_asian_width(cp);
+
+	switch(width_prop) {
+		case X::F:
+		case X::W:
+			return 2;
+		default:
+			return 1;
 	}
-	prior_selection_idx = selection_idx;
 }
 
-void List::do_quick_draw(const Bounds& bounds) {
-	if (prior_selection_idx == selection_idx) return;
 
-	draw_row(prior_selection_idx, bounds);
-	draw_row(selection_idx, bounds);
-	prior_selection_idx = selection_idx;
+ListModel<Unicode::string_t> *list_model = new DemoListModel();
+DemoListView *list_view = new DemoListView(list_model);
+
+void Demo::init() {
+	color_scheme.set_partial_highlight("Normal",     {"lightgrey", ""});
+	color_scheme.set_partial_highlight("StatusLine", {"blue", ""});
+
+	color_scheme.set_partial_highlight("todoPriorityHighest", {"brightred", ""});
+	color_scheme.set_partial_highlight("todoPriorityHigher",  {"red", ""});
+	color_scheme.set_partial_highlight("todoPriorityHigh",    {"yellow", ""});
+
+	color_scheme.set_partial_highlight("todoPriorityLowest",  {"brightblue", ""});
+	color_scheme.set_partial_highlight("todoPriorityLower",   {"blue", ""});
+	color_scheme.set_partial_highlight("todoPriorityLow",     {"green", ""});
 }
 
-int List::get_num_options() {
-	return 2;
+void Demo::draw() {
+	Rectangle bounds;
+	bounds.x = 0;
+	bounds.y = 0;
+	Terminal::get_size(bounds.width, bounds.height);
+
+	list_view->draw(bounds);
+
+	color_scheme.get_highlight({"StatusLine"}).activate();
+	Terminal::mvaddraw(0, bounds.height - 1, status);
+
+	Terminal::flush();
 }
 
-Unicode::string_t List::get_option(int idx) {
-	switch (idx) {
-		case 0: return Encoding::decode_literal("Open Editor");
-		case 1: return Encoding::decode_literal("Exit");
+void Demo::event(const Terminal::Event &event) {
+
+	switch (event.type) {
+
+		case Terminal::EventType::EXIT:
+			running = false;
+			break;
+
+		case Terminal::EventType::RESIZE:
+			break;
+
+		case Terminal::EventType::TEXT:
+			for (auto cp : event.e_text.text) {
+				switch (cp) {
+					case 'q':
+						running = false;
+						break;
+					case 'j':
+						list_model->scroll_down();
+						break;
+					case 'k':
+						list_model->scroll_up();
+						break;
+					case 'g':
+						list_model->home();
+						break;
+					case 'G':
+						list_model->end();
+						break;
+					case 'l':
+						if (list_model->selection_index == 3) {
+							running = false;
+						}
+						break;
+				}
+			}
+			draw();
+			break;
+
+		default:
+			break;
 	}
-	throw std::runtime_error("out of bounds");
+}
+
+bool Demo::is_running() {
+	return running;
 }
 

@@ -3,77 +3,89 @@
 
 #include "unicode.hpp"
 
-struct Bounds {
+struct Point {
+
+	unsigned short x, y;
+
+	Point() {}
+
+	Point(
+			unsigned short x,
+			unsigned short y) :
+		x(x), y(y) {}
+
+	bool operator==(const Point& o) const {
+		return x == o.x && y == o.y;
+	}
+
+	bool operator!=(const Point& o) const {
+		return x != o.x || y != o.y;
+	}
+
+};
+
+struct Dimension {
+
+	unsigned short width, height;
+
+	Dimension() {}
+
+	Dimension(
+			unsigned short width,
+			unsigned short height) :
+		width(width), height(height) {}
+
+	bool operator==(const Dimension& o) const {
+		return width == o.width && height == o.height;
+	}
+
+	bool operator!=(const Dimension& o) const {
+		return width != o.width || height != o.height;
+	}
+
+};
+
+struct Rectangle {
+
 	unsigned short x, y, width, height;
 
-	Bounds() {}
+	Rectangle() {}
 
-	Bounds(int x, int y, int width, int height) :
+	Rectangle(
+			unsigned short x,
+			unsigned short y,
+			unsigned short width,
+			unsigned short height) :
 		x(x), y(y), width(width), height(height) {}
 
-	Bounds(int width, int height) :
+	Rectangle(
+			unsigned short width,
+			unsigned short height) :
 		x(0), y(0), width(width), height(height) {}
 
-};
+	Rectangle(
+			const Point& point,
+			const Dimension& dimension) :
+		x(point.x), y(point.y), width(dimension.width), height(dimension.height) {}
 
-class Component {
-	public:
-		Component() {};
+	bool is_zero() const {
+		return width == 0 || height == 0;
+	}
 
-		void set_needs_full_draw() {
-			this->needs_full_draw = true;
-		}
+	bool operator==(const Rectangle& o) const {
+		return x == o.x
+			&& y == o.y
+			&& width == o.width
+			&& height == o.height;
+	}
 
-		void full_draw(const Bounds& bounds) {
-			do_full_draw(bounds);
-			this->needs_full_draw = false;
-		}
+	bool operator!=(const Rectangle& o) const {
+		return x != o.x
+			|| y != o.y
+			|| width != o.width
+			|| height != o.height;
+	}
 
-		void quick_draw(const Bounds& bounds) {
-			if (this->needs_full_draw) {
-				full_draw(bounds);
-				return;
-			}
-			do_quick_draw(bounds);
-		}
-
-	protected:
-		virtual void do_full_draw(const Bounds& bounds) = 0;
-		virtual void do_quick_draw(const Bounds& bounds) = 0;
-
-		bool needs_full_draw = true;
-};
-
-class List : public Component {
-	public:
-		int get_num_options();
-		Unicode::string_t get_option(int idx);
-
-		int get_selection_index() { return this->selection_idx; }
-
-		void set_selection_index(int idx) { this->selection_idx = idx; }
-
-		void move_selection_index(int move) {
-			int idx = selection_idx + move;
-
-			if (idx < 0) {
-				set_selection_index(0);
-			} else if (idx >= get_num_options()) {
-				set_selection_index(get_num_options() - 1);
-			} else {
-				set_selection_index(get_selection_index() + move);
-			}
-		}
-
-	protected:
-		void do_full_draw(const Bounds& bounds);
-		void do_quick_draw(const Bounds& bounds);
-
-	private:
-		int prior_selection_idx = 0;
-		int selection_idx = 0;
-
-		void draw_row(int idx, const Bounds& bounds);
 };
 
 #endif
