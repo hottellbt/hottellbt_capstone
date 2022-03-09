@@ -130,15 +130,37 @@ def get_lib_capstone(makefile, home, bin_dir,
     return lib
 
 
+def get_lib_twig(makefile, home, bin_dir,
+        lib_unicode, lib_encoding):
+
+    lib = CxxProject("lib_twig", bin_dir)
+    lib.add_subproject(lib_unicode)
+    lib.add_subproject(lib_encoding)
+
+    lib.add_include_dir(os.path.join(home, "include"))
+
+    for name in [
+            ]:
+        lib.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
+
+    for name in [
+            ]:
+        lib.add_cxxtest_suite(os.path.join(home, "test", f"test_{name}.hpp"))
+
+    return lib
+
+
 def get_main_project(makefile, home, bin_dir):
     lib_unicode = get_lib_unicode(makefile, os.path.join(home, "lib_unicode"), bin_dir)
     lib_encoding = get_lib_encoding(makefile, os.path.join(home, "lib_encoding"), bin_dir, lib_unicode)
     lib_capstone = get_lib_capstone(makefile, os.path.join(home, "lib_capstone"), bin_dir, lib_unicode, lib_encoding)
+    lib_twig = get_lib_twig(makefile, os.path.join(home, "lib_twig"), bin_dir, lib_unicode, lib_encoding)
 
     proj = CxxProject("hottellbt_capstone", bin_dir, executable=True)
     proj.add_subproject(lib_unicode)
     proj.add_subproject(lib_capstone)
     proj.add_subproject(lib_encoding)
+    proj.add_subproject(lib_twig)
 
     for name in [
             "main",
