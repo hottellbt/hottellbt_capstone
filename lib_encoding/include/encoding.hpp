@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 
-namespace Encoding {
+namespace encoding {
 
 	class encoding_error : public std::runtime_error {
 		public:

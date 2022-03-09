@@ -26,7 +26,7 @@ char read_buffer[read_buffer_len];
 sig_atomic_t cached_window_size_valid = 0;
 unsigned short cached_window_rows, cached_window_cols;
 
-Encoding::UTF8::UTF8BufferedDecoder decoder;
+encoding::UTF8::UTF8BufferedDecoder decoder;
 
 void signal_handler(int signal) {
 	switch (signal) {

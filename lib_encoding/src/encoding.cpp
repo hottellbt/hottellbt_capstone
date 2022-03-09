@@ -1,6 +1,6 @@
 #include "encoding.hpp"
 
-const char* Encoding::to_string(const Encoding e) {
+const char* encoding::to_string(const Encoding e) {
 	switch(e) {
 		case Encoding::UTF8: return "UTF-8";
 		case Encoding::UCS2: return "UCS-2";

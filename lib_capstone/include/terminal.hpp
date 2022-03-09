@@ -205,7 +205,7 @@ namespace Terminal {
 	void addstr(const Unicode::string_t &str);
 
 	inline void addliteral(const char* literal) {
-		addstr(Encoding::decode_literal(literal));
+		addstr(encoding::decode_literal(literal));
 	}
 
 	inline void mvaddstr(int col, int row, const Unicode::string_t &str) {
@@ -365,7 +365,7 @@ namespace Terminal {
 	}
 
 	inline void addstr(const Unicode::string_t &s) {
-		addraw(Encoding::UTF8::encode(s));
+		addraw(encoding::UTF8::encode(s));
 	}
 
 };

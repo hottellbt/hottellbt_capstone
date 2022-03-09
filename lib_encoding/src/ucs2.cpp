@@ -4,7 +4,7 @@
 #include "encoding.hpp"
 
 
-Unicode::string_t Encoding::UCS2::UCS2BufferedDecoder::decode(
+Unicode::string_t encoding::UCS2::UCS2BufferedDecoder::decode(
 		const char *input,
 		const size_t input_len) {
 
@@ -40,7 +40,7 @@ Unicode::string_t Encoding::UCS2::UCS2BufferedDecoder::decode(
 	return ret;
 }
 
-std::string Encoding::UCS2::encode(const Unicode::string_t &s) {
+std::string encoding::UCS2::encode(const Unicode::string_t &s) {
 	std::string ret;
 	ret.reserve(s.size() * 2);
 

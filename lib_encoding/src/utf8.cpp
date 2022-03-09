@@ -4,14 +4,14 @@
 #include "encoding.hpp"
 
 using Unicode::codepoint_t;
-using Encoding::encoding_error;
-using Encoding::decoding_error;
+using encoding::encoding_error;
+using encoding::decoding_error;
 
 inline bool is_appendee(char c) {
 	return (c & 0xC0) == 0x80;
 }
 
-Unicode::string_t Encoding::UTF8::UTF8BufferedDecoder::decode(const char *bytes, const size_t bytes_len) {
+Unicode::string_t encoding::UTF8::UTF8BufferedDecoder::decode(const char *bytes, const size_t bytes_len) {
 
 	Unicode::string_t ret;
 
@@ -62,7 +62,7 @@ Unicode::string_t Encoding::UTF8::UTF8BufferedDecoder::decode(const char *bytes,
 	return ret;
 }
 
-std::string Encoding::UTF8::encode(const Unicode::string_t &s) {
+std::string encoding::UTF8::encode(const Unicode::string_t &s) {
 	const auto s_size = s.size();
 
 	std::string ret;
