@@ -4,6 +4,8 @@
 #include <string>
 #include <cstdint>
 
+#include "encoding.hpp"
+
 namespace todo {
 
 	enum class Priority : int8_t {
@@ -31,7 +33,7 @@ namespace todo {
 		public:
 			Priority priority = Priority::DEFAULT;
 			Status status = Status::DEFAULT;
-			std::string title_utf8 = "New Item";
+			Unicode::string_t title = Encoding::decode_literal("New Item");
 
 			Item() {}
 	};

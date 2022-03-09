@@ -5,8 +5,6 @@
 #include "terminal.hpp"
 
 namespace Demo {
-	int get_terminal_width(Unicode::codepoint_t cp);
-
 	void init();
 	void event(const Terminal::Event &event);
 	void draw();

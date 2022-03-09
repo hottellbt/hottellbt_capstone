@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "demo.hpp"
 #include "unicode.hpp"
 #include "components.hpp"
@@ -5,51 +7,11 @@
 #include "highlight.hpp"
 #include "encoding.hpp"
 #include "terminal.hpp"
+#include "todo.hpp"
 
 bool running = true;
-Highlight::ColorScheme color_scheme;
+highlight::ColorScheme color_scheme;
 std::string status = "Hello world";
-
-Unicode::string_t normalize_string(
-		const Unicode::string_t &s,
-		int max_width,
-		int *actual_width) {
-
-	static constexpr Unicode::codepoint_t ellipses = 0x2026;
-	static const int ellipses_width = Demo::get_terminal_width(ellipses);
-
-	const int s_size = s.size();
-
-	int width = 0;
-	Unicode::string_t ret;
-
-	for (size_t i = 0; i < s_size; i++) {
-		auto cp = s[i];
-		
-		int cp_width = Demo::get_terminal_width(cp);
-
-		if (width + cp_width + ellipses_width > max_width) {
-
-			if (i == s_size - 1 && (width + cp_width <= max_width)) {
-				ret.push_back(cp);
-				width += cp_width;
-			} else {
-				ret.push_back(ellipses);
-				width += ellipses_width;
-			}
-			break;
-		} else {
-			width += cp_width;
-			ret.push_back(cp);
-		}
-	}
-
-	if (actual_width != nullptr) {
-		*actual_width = width;
-	}
-
-	return ret;
-}
 
 template<typename T>
 class ListModel {
@@ -73,26 +35,24 @@ class ListModel {
 				selection_index++;
 			}
 		}
-		
+
 		void home() { selection_index = 0; }
 		void end() { selection_index = num_elements() - 1; }
 };
 
-class DemoListModel : public ListModel<Unicode::string_t> {
+class DemoListModel : public ListModel<todo::Item> {
 	public:
-		size_t num_elements() { return 4; }
-
-		Unicode::string_t get_element(size_t idx) {
-			switch (idx) {
-				case 0: return Encoding::decode_literal("Dummy 1");
-				case 1: return Encoding::decode_literal("Dummy 2");
-				case 2: return Encoding::decode_literal("Dummy 3");
-				case 3: return Encoding::decode_literal("Exit");
-			}
-			throw std::runtime_error(
-					(std::string) "out of bounds: " + std::to_string(idx));
+		DemoListModel() {
+			items.push_back({});
 		}
 
+		std::vector<todo::Item> items;
+
+		size_t num_elements() { return items.size(); }
+
+		todo::Item get_element(size_t idx) { return items[idx]; }
+
+	private:
 };
 
 template<typename T>
@@ -100,6 +60,10 @@ class ListView {
 	public:
 		ListView(ListModel<T> *model) :model(model) {}
 		virtual ~ListView() {}
+
+		void set_needs_redraw() {
+			needs_redraw = true;
+		}
 
 		void draw(const Rectangle& bounds) {
 			// for now we assume that every row has a height of 1
@@ -161,27 +125,23 @@ class ListView {
 		Rectangle last_draw_bounds;
 		size_t last_draw_selection;
 
-		bool needs_full_draw() {
-			return false;
-		}
-
 };
 
-class DemoListView : public ListView<Unicode::string_t> {
+class DemoListView : public ListView<todo::Item> {
 	public:
-		DemoListView(ListModel<Unicode::string_t> *model) : ListView(model) {}
+		DemoListView(ListModel<todo::Item> *model) : ListView(model) {}
 
 	protected:
 		void draw_row(
 				const Rectangle& bounds,
-				const Unicode::string_t& value,
+				const todo::Item& value,
 				size_t index,
-				bool selected);
+				bool selected) override;
 };
 
 void DemoListView::draw_row(
 		const Rectangle& bounds,
-		const Unicode::string_t& value,
+		const todo::Item& value,
 		size_t index,
 		bool selected) {
 
@@ -197,38 +157,24 @@ void DemoListView::draw_row(
 		color_scheme.get_highlight({"list", "listNormal"}).activate();
 	}
 
-	int option_str_width;
+	auto x = bounds.x;
+	auto y = bounds.y;
+	Terminal::mv(x, y);
 
-	Unicode::string_t option_str = normalize_string(
-			value, bounds.width, &option_str_width);
-
-	Terminal::mvaddstr(bounds.x, bounds.y, option_str);
-
-	for (int i = option_str_width; i < bounds.width; i++) {
-		Terminal::addraw(' ');
+	if (bounds.width > 6) {
+		Terminal::addliteral("[");
+		Terminal::addliteral("] ");
 	}
-		
+
+	Terminal::addstr(value.title);
+
 	if (highlight) {
 		Terminal::unset_invert();
 		Terminal::set_normal_intensity();
 	}
 }
 
-int Demo::get_terminal_width(Unicode::codepoint_t cp) {
-	using X = Unicode::EastAsianWidth;
-	const auto width_prop = Unicode::get_east_asian_width(cp);
-
-	switch(width_prop) {
-		case X::F:
-		case X::W:
-			return 2;
-		default:
-			return 1;
-	}
-}
-
-
-ListModel<Unicode::string_t> *list_model = new DemoListModel();
+ListModel<todo::Item> *list_model = new DemoListModel();
 DemoListView *list_view = new DemoListView(list_model);
 
 void Demo::init() {
@@ -245,15 +191,13 @@ void Demo::init() {
 }
 
 void Demo::draw() {
-	Rectangle bounds;
-	bounds.x = 0;
-	bounds.y = 0;
-	Terminal::get_size(bounds.width, bounds.height);
+	unsigned short x = 0, y = 0, width, height;
+	Terminal::get_size(width, height);
 
-	list_view->draw(bounds);
+	list_view->draw({x, y, width, (unsigned short) (height - 1)});
 
 	color_scheme.get_highlight({"StatusLine"}).activate();
-	Terminal::mvaddraw(0, bounds.height - 1, status);
+	Terminal::mvaddraw(0, height - 1, status);
 
 	Terminal::flush();
 }
@@ -267,6 +211,7 @@ void Demo::event(const Terminal::Event &event) {
 			break;
 
 		case Terminal::EventType::RESIZE:
+			Terminal::clear();
 			break;
 
 		case Terminal::EventType::TEXT:

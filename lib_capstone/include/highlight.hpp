@@ -8,7 +8,7 @@
 #include <map>
 #include <cstdint>
 
-namespace Highlight {
+namespace highlight {
 
 	class Highlight {
 		public:
@@ -18,6 +18,11 @@ namespace Highlight {
 			bool operator==(const Highlight &c) const {
 				return fg == c.fg
 					&& bg == c.bg;
+			}
+
+			bool operator!=(const Highlight &c) const {
+				return fg != c.fg
+					|| bg != c.bg;
 			}
 
 			void activate() {
