@@ -7,53 +7,53 @@
 #include "unicode.hpp"
 #include "encoding.hpp"
 
-static const std::vector<Encoding::Encoding> all_encodings {
-		Encoding::Encoding::UTF8,
-		Encoding::Encoding::UCS2,
+static const std::vector<encoding::Encoding> all_encodings {
+		encoding::Encoding::UTF8,
+		encoding::Encoding::UCS2,
 	};
 
 class UTF8TestSuite : public CxxTest::TestSuite {
 	public:
 
 		void smoke_test(
-				const Encoding::Encoding encoding,
+				const encoding::Encoding encoding,
 				const char* input,
 				const size_t input_size) {
 
-			const Unicode::string_t decoded = Encoding::decode(encoding, input, input_size);
+			const Unicode::string_t decoded = encoding::decode(encoding, input, input_size);
 
-			const std::string actual = Encoding::encode(encoding, decoded);
+			const std::string actual = encoding::encode(encoding, decoded);
 
 			if (input != actual) {
 				TS_FAIL((std::string) "encoded != decoded, input=" 
 						+ input + " actual=" + actual + " for encoding "
-						+ Encoding::to_string(encoding));
+						+ encoding::to_string(encoding));
 			}
 		}
 
 		void smoke_test(
-				const Encoding::Encoding encoding,
+				const encoding::Encoding encoding,
 				const std::string& input) {
 			smoke_test(encoding, input.c_str(), input.size());
 		}
 
 		void check_decode(
-				const Encoding::Encoding encoding,
+				const encoding::Encoding encoding,
 				const char* input,
 				const size_t input_size,
 				const Unicode::string_t &result) {
 
-			const auto decoded = Encoding::decode(encoding, input, input_size);
+			const auto decoded = encoding::decode(encoding, input, input_size);
 
 			if (decoded != result) {
 				TS_FAIL((std::string) "decoding failed, input=" 
 						+ input + " for encoding "
-						+ Encoding::to_string(encoding));
+						+ encoding::to_string(encoding));
 			}
 		}
 
 		void check_decode(
-				const Encoding::Encoding encoding,
+				const encoding::Encoding encoding,
 				const char* input,
 				const size_t input_size,
 				const Unicode::codepoint_t result) {
@@ -68,7 +68,7 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 			}
 		}
 
-		void test_ascii(const Encoding::Encoding e) {
+		void test_ascii(const encoding::Encoding e) {
 			for (uint8_t i = 1; i < 128; i++) {
 				char s[2];
 				s[0] = i;
@@ -85,7 +85,7 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 		}
 
 		void test_utf8(void) {
-			const auto e = Encoding::Encoding::UTF8;
+			const auto e = encoding::Encoding::UTF8;
 
 			test_ascii(e);
 
@@ -110,7 +110,7 @@ class UTF8TestSuite : public CxxTest::TestSuite {
 		}
 
 		void test_ucs2(void) {
-			const auto e = Encoding::Encoding::UCS2;
+			const auto e = encoding::Encoding::UCS2;
 
 			for (uint8_t i = 1; i < 128; i++) {
 				char s[2];

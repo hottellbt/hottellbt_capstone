@@ -189,6 +189,8 @@ class CxxProject:
         self.executable = executable
         self.executable_path = os.path.join(self.bin_dir, self.name)
 
+        self.links = set()
+
         self.subprojects = []
 
         self.all_include_dirs = set()
@@ -204,6 +206,9 @@ class CxxProject:
         obj_file_basename = source_file_basename + '.o'
         obj_file = os.path.join(self.bin_dir, obj_file_basename)
         return obj_file
+
+    def add_link(self, link):
+        self.links.add(link)
 
     def add_inclusion(self, target, inclusion):
         self.get_rule(target).add_inclusion(inclusion)
@@ -221,6 +226,15 @@ class CxxProject:
         self.all_include_dirs.add(include_dir)
         if public:
             self.public_include_dirs.add(include_dir)
+
+    def get_all_links(self):
+        ret = set()
+        for x in self.links:
+            ret.add(x)
+        for subproj in self.subprojects:
+            for x in subproj.get_all_links():
+                ret.add(x)
+        return ret
 
     def get_public_include_dirs(self):
         ret = set()
@@ -293,14 +307,22 @@ class CxxProject:
         if makefile.add_flag(self.flag):
             return
 
-        default_cxx_compile_flags_list = [ "-std=c++17" ]
+        cxx_i_flags = []
         for x in self.get_all_include_dirs():
-            default_cxx_compile_flags_list.append(f"-I{x}")
-        default_cxx_compile_flags = " ".join(default_cxx_compile_flags_list)
+            cxx_i_flags.append(f"-I{x}")
 
-        cxx_compile = f"$(CXX) {default_cxx_compile_flags}"
+        cxx_l_flags = []
+        for x in self.get_all_links():
+            cxx_l_flags.append(f"-l{x}")
 
-        cxx_link = f"$(CXX)"
+        cxx_i_flags_str = ' '.join(cxx_i_flags)
+        cxx_l_flags_str = ' '.join(cxx_l_flags)
+
+        cxx = "$(CXX) -std=c++17"
+
+        cxx_compile = f"{cxx} {cxx_i_flags_str}"
+
+        cxx_link = f"{cxx} {cxx_l_flags_str}"
         
         LINKED_OBJS = self.get_linked_objects()
 

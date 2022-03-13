@@ -115,15 +115,12 @@ def get_lib_capstone(makefile, home, bin_dir,
     test = os.path.join(home,  "test")
 
     for name in [
-            "terminal",
             "os_helper",
             "todo",
-            "terminal_colors",
             ]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
 
     for name in [
-            "color",
             ]:
         lib.add_cxxtest_suite(os.path.join(test, f"test_{name}.hpp"))
 
@@ -136,10 +133,13 @@ def get_lib_twig(makefile, home, bin_dir,
     lib = CxxProject("lib_twig", bin_dir)
     lib.add_subproject(lib_unicode)
     lib.add_subproject(lib_encoding)
+    lib.add_link("ncurses")
 
     lib.add_include_dir(os.path.join(home, "include"))
 
     for name in [
+            "twig_color",
+            "twig_curses"
             ]:
         lib.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
@@ -164,7 +164,6 @@ def get_main_project(makefile, home, bin_dir):
 
     for name in [
             "main",
-            "demo",
             ]:
         proj.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
