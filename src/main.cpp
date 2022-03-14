@@ -1,7 +1,6 @@
 #include <vector>
 #include <iostream>
 #include <exception>
-#include <cerrno>
 #include <cstring>
 
 #include "os_helper.hpp"
