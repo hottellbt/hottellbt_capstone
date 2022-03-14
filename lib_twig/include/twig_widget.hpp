@@ -21,10 +21,13 @@ namespace twig::widget {
 
 	class Graphics {
 		public:
+			void* magic;
+
 			Graphics(void* magic) : magic(magic) {}
 			~Graphics();
 
 			WDim get_size(void);
+			WPoint get_position(void);
 
 			void clear_fast(void);
 			void clear_full(void);
@@ -121,12 +124,32 @@ namespace twig::widget {
 				add_str_utf8(str);
 			}
 
-			void* get_magic() { return magic; }
-
 			void when_owner_resized(const WDim& new_size);
 
-		private:
-			void* magic;
+			inline unsigned short get_str_width(Unicode::codepoint_t cp) {
+				using X = Unicode::EastAsianWidth;
+				const auto width_prop = Unicode::get_east_asian_width(cp);
+				switch(width_prop) {
+					case X::F:
+					case X::W:
+						return 2;
+					default:
+						return 1;
+				}
+			}
+
+			template <typename T>
+			inline unsigned short get_str_width(T s, size_t start, size_t end) {
+				unsigned short sum = 0;
+				for (size_t i = start; i < end; i++) {
+					sum += get_str_width(s[i]);
+				}
+				return sum;
+			}
+
+			inline unsigned short get_str_width(Unicode::string_t s) {
+				return get_str_width(s, 0, s.size());
+			}
 	};
 
 	std::unique_ptr<Graphics> request_graphics(void);
@@ -138,10 +161,6 @@ namespace twig::widget {
 			virtual ~Widget() {}
 
 			virtual void repaint() = 0;
-
-			void* get_graphics_magic() {
-				return graphics->get_magic();
-			}
 
 			std::unique_ptr<Graphics>& get_graphics(void) {
 				return graphics;

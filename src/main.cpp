@@ -76,9 +76,17 @@ void DemoListPainter::draw_row(
 		g->add_ch(' ');
 		if (add_brackets) g->add_ch(']');
 		g->add_ch(' ');
+
+		if (add_brackets) x += 4;
+		else x += 2;
 	}
 
 	g->add_unicode_str(value.title);
+	x += g->get_str_width(value.title);
+
+	for (; x < bounds.width; x++) {
+		g->add_ch(' ');
+	}
 
 	if (highlight) {
 		g->set_standout(false);

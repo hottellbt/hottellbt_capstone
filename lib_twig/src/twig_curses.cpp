@@ -69,6 +69,12 @@ WDim Graphics::get_size(void) {
 	return {x, y};
 }
 
+WPoint Graphics::get_position(void) {
+	WInt y, x;
+	getyx((WINDOW*) magic, y, x);
+	return {x, y};
+}
+
 void Graphics::clear_fast(void) {
 	werase((WINDOW*) magic);
 }
@@ -176,7 +182,7 @@ inline void do_repaint(twig::TwigApp *app) {
 	WPoint root_ul = root_widget->get_position();
 
 	pnoutrefresh(
-			(WINDOW*) root_widget->get_graphics_magic(),
+			(WINDOW*) root_widget->get_graphics()->magic,
 			0,
 			0,
 			root_ul.y,
