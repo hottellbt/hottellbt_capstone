@@ -90,7 +90,7 @@ namespace twig::widget {
 
 			void repaint() override {
 				auto& g = get_graphics();
-				const WDim bounds = get_size();
+				const WDim bounds = g->get_size();
 
 				g->clear_fast();
 

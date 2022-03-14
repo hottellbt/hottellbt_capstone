@@ -21,6 +21,9 @@ void twig::curses::init() {
 	noecho();
 	curs_set(0);
 
+	// this prevents the screen from being blank at launch
+	wrefresh(stdscr);
+
 	in_app_mode = true;
 }
 
@@ -174,6 +177,7 @@ twig::special_key get_special_key(int curses_key) {
 }
 
 inline void do_repaint(twig::TwigApp *app) {
+
 	Widget* root_widget = app->get_root_widget();
 
 	root_widget->repaint();
@@ -191,13 +195,18 @@ inline void do_repaint(twig::TwigApp *app) {
 			root_ul.x + root_dim.width);
 
 	wrefresh(stdscr);
+
 }
 
 inline void do_resize(twig::TwigApp *app) {
-	Widget* root = app->get_root_widget();
+	// this prevents strange behavior while resizing
+	wrefresh(stdscr);
+
 	WInt maxy, maxx;
 	getmaxyx(stdscr, maxy, maxx);
-	root->set_size({maxx, maxy});
+
+	Widget* root_widget = app->get_root_widget();
+	root_widget->set_size({maxx, maxy});
 }
 
 int twig::curses::run_twig_app(TwigApp *app) {
@@ -217,9 +226,6 @@ int twig::curses::run_twig_app(TwigApp *app) {
 		twig::curses::init();
 
 		do_resize(app);
-		do_repaint(app);
-
-		// TODO i am not sure why we have to call this twice here
 		do_repaint(app);
 
 		int ch;
