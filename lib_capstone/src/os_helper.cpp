@@ -138,8 +138,6 @@ std::string OS::Subprocess::open_editor_line(
 	std::string ret;
 
 	// cobble together the c-string for mkstemps
-	static const char* X6 = "XXXXXX";
-
 	const int prefix_len = std::strlen(prefix);
 	const int suffix_len = std::strlen(suffix);
 	const int tmp_buffer_len = prefix_len + suffix_len + 6;
@@ -149,10 +147,9 @@ std::string OS::Subprocess::open_editor_line(
 
 	strncpy(tmp_buffer_idx, prefix, prefix_len);
 	tmp_buffer_idx += prefix_len;
-	strncpy(tmp_buffer_idx, X6, 6);
+	strncpy(tmp_buffer_idx, "XXXXXX", 6);
 	tmp_buffer_idx += 6;
 	strncpy(tmp_buffer_idx, suffix, suffix_len);
-
 	tmp_buffer[tmp_buffer_len] = 0;
 
 	// invoke mkstemps

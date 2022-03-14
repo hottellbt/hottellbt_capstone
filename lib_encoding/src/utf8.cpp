@@ -15,7 +15,7 @@ Unicode::string_t encoding::UTF8::UTF8BufferedDecoder::decode(const char *bytes,
 
 	Unicode::string_t ret;
 
-	for (int i = 0; i < bytes_len; i++) {
+	for (uint i = 0; i < bytes_len; i++) {
 		char b = bytes[i];
 
 		if (codepoint_pos == 0) {

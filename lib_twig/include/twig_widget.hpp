@@ -11,8 +11,12 @@
 #include <stdexcept>
 #include <memory>
 #include <string>
+#include <optional>
+
+#include <cassert>
 
 namespace twig::widget {
+
 	typedef unsigned short int WInt;
 
 	typedef twig::geom::Point<WInt>     WPoint;
@@ -23,6 +27,7 @@ namespace twig::widget {
 		public:
 			void* magic;
 
+			Graphics() : Graphics(nullptr) {}
 			Graphics(void* magic) : magic(magic) {}
 			~Graphics();
 
@@ -152,17 +157,30 @@ namespace twig::widget {
 			}
 	};
 
-	std::unique_ptr<Graphics> request_graphics(void);
+	inline std::unique_ptr<Graphics> request_graphics() {
+		return std::unique_ptr<Graphics>(new Graphics());
+	}
 
 	class Widget {
 		public:
-			Widget() {}
+			Widget() {
+				if (is_graphical()) {
+					graphics = request_graphics();
+				} else {
+					graphics = nullptr;
+				}
+			}
 
 			virtual ~Widget() {}
 
 			virtual void repaint() = 0;
 
+			bool is_graphical() const noexcept {
+				return true;
+			}
+
 			std::unique_ptr<Graphics>& get_graphics(void) {
+				assert(is_graphical());
 				return graphics;
 			}
 
@@ -173,19 +191,21 @@ namespace twig::widget {
 			void set_position(const WPoint& x) { position = x; }
 
 			void set_size(const WDim& new_size) {
-				if (new_size.width < 1 || new_size.height < 1) {
-					throw std::runtime_error("cannot resize widget to zero");
-				}
+
+				assert(new_size.width > 0 && new_size.height > 0);
+
 				if (size != new_size) {
 					size = new_size;
-					graphics->when_owner_resized(new_size);
+					if (is_graphical()) {
+						graphics->when_owner_resized(new_size);
+					}
 				}
 			}
 
 		private:
 			WPoint position {0, 0};
 			WDim size {0, 0};
-			std::unique_ptr<Graphics> graphics = request_graphics();
+			std::unique_ptr<Graphics> graphics = nullptr;
 	};
 }
 

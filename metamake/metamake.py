@@ -318,7 +318,7 @@ class CxxProject:
         cxx_i_flags_str = ' '.join(cxx_i_flags)
         cxx_l_flags_str = ' '.join(cxx_l_flags)
 
-        cxx = "$(CXX) -std=c++17"
+        cxx = "$(CXX) -g -Og -Werror -Wall -std=c++17"
 
         cxx_compile = f"{cxx} {cxx_i_flags_str}"
 

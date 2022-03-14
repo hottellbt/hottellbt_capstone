@@ -1,10 +1,12 @@
 #include "twig_app.hpp"
 
 #include <stdexcept>
-#include <cerrno>
-#include <cstring>
 #include <iostream>
 #include <memory>
+
+#include <cerrno>
+#include <cstring>
+#include <cassert>
 
 #include <ncurses.h>
 
@@ -48,10 +50,6 @@ using twig::widget::WPoint;
 
 using twig::color::ColorPair;
 
-std::unique_ptr<Graphics> twig::widget::request_graphics(void) {
-	return std::unique_ptr<Graphics> (new Graphics(nullptr));
-}
-
 Graphics::~Graphics() {
 	if (magic != nullptr && magic != stdscr) {
 		delwin((WINDOW*) magic);
@@ -67,22 +65,26 @@ void Graphics::when_owner_resized(const WDim& new_size) {
 }
 
 WDim Graphics::get_size(void) {
+	assert(magic != nullptr);
 	WInt y, x;
 	getmaxyx((WINDOW*) magic, y, x);
 	return {x, y};
 }
 
 WPoint Graphics::get_position(void) {
+	assert(magic != nullptr);
 	WInt y, x;
 	getyx((WINDOW*) magic, y, x);
 	return {x, y};
 }
 
 void Graphics::clear_fast(void) {
+	assert(magic != nullptr);
 	werase((WINDOW*) magic);
 }
 
 void Graphics::clear_full(void) {
+	assert(magic != nullptr);
 	wclear((WINDOW*) magic);
 }
 
@@ -91,66 +93,80 @@ void Graphics::set_color_pair(const ColorPair &c) {
 }
 
 void Graphics::set_normal(void) {
+	assert(magic != nullptr);
 	wattrset((WINDOW*) magic, A_NORMAL);
 }
 
 void Graphics::mv(WInt x, WInt y) {
+	assert(magic != nullptr);
 	wmove((WINDOW*) magic, y, x);
 }
 
 void Graphics::add_ch(char c) {
+	assert(magic != nullptr);
 	waddch((WINDOW*) magic, c);
 }
 
 void Graphics::add_str_raw(const char* str, const size_t len) {
+	assert(magic != nullptr);
 	waddnstr((WINDOW*) magic, str, len);
 }
 
 void Graphics::add_str_raw(const char* str) {
+	assert(magic != nullptr);
 	waddstr((WINDOW*) magic, str);
 }
 
 void Graphics::set_standout(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_STANDOUT);
 	else   wattroff((WINDOW*) magic, A_STANDOUT);
 }
 
 void Graphics::set_underline(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_UNDERLINE);
 	else   wattroff((WINDOW*) magic, A_UNDERLINE);
 }
 
 void Graphics::set_reverse(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_REVERSE); 
 	else   wattroff((WINDOW*) magic, A_REVERSE); 
 }
 
 void Graphics::set_blink(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_BLINK);   
 	else   wattroff((WINDOW*) magic, A_STANDOUT);
 }
 
 void Graphics::set_dim(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_DIM);     
 	else   wattroff((WINDOW*) magic, A_DIM);     
 }
 
 void Graphics::set_bold(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_BOLD);    
 	else   wattroff((WINDOW*) magic, A_BOLD);    
 }
 
 void Graphics::set_protect(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_PROTECT); 
 	else   wattroff((WINDOW*) magic, A_PROTECT); 
 }
 
 void Graphics::set_invisible(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_INVIS);   
 	else   wattroff((WINDOW*) magic, A_INVIS);   
 }
 
 void Graphics::set_italic(const bool b) {
+	assert(magic != nullptr);
 	if (b) wattron ((WINDOW*) magic, A_ITALIC);  
 	else   wattroff((WINDOW*) magic, A_ITALIC);  
 }
@@ -177,16 +193,22 @@ twig::special_key get_special_key(int curses_key) {
 }
 
 inline void do_repaint(twig::TwigApp *app) {
+	assert(app != nullptr);
 
 	Widget* root_widget = app->get_root_widget();
+
+	assert(root_widget != nullptr);
 
 	root_widget->repaint();
 
 	WDim root_dim = root_widget->get_size();
 	WPoint root_ul = root_widget->get_position();
 
+	void* magic = root_widget->get_graphics()->magic;
+	assert(magic != nullptr);
+
 	pnoutrefresh(
-			(WINDOW*) root_widget->get_graphics()->magic,
+			(WINDOW*) magic,
 			0,
 			0,
 			root_ul.y,
@@ -199,6 +221,8 @@ inline void do_repaint(twig::TwigApp *app) {
 }
 
 inline void do_resize(twig::TwigApp *app) {
+	assert(app != nullptr);
+
 	// this prevents strange behavior while resizing
 	wrefresh(stdscr);
 
@@ -206,6 +230,8 @@ inline void do_resize(twig::TwigApp *app) {
 	getmaxyx(stdscr, maxy, maxx);
 
 	Widget* root_widget = app->get_root_widget();
+	assert(root_widget != nullptr);
+
 	root_widget->set_size({maxx, maxy});
 }
 
