@@ -8,6 +8,8 @@
 
 namespace todo {
 
+	static int counter = 0;
+
 	enum class Priority : int8_t {
 		LOWEST  = -3,
 		LOWER   = -2,
@@ -33,7 +35,7 @@ namespace todo {
 		public:
 			Priority priority = Priority::DEFAULT;
 			Status status = Status::DEFAULT;
-			Unicode::string_t title = encoding::decode_literal("New Item");
+			Unicode::string_t title = encoding::decode_literal((std::string) "New Item " + std::to_string(counter++));
 
 			Item() {}
 	};

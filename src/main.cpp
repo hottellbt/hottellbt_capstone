@@ -1,6 +1,8 @@
 #include <vector>
 #include <iostream>
 #include <exception>
+
+#include <cassert>
 #include <cstring>
 
 #include "os_helper.hpp"
@@ -31,6 +33,25 @@ class DemoListModel : public twig::widget::ListModel<todo::Item> {
 		size_t num_elements() { return items.size(); }
 
 		todo::Item get_element(size_t idx) { return items[idx]; }
+
+		void erase(const size_t erase_idx) {
+			assert(num_elements() > 0);
+			assert(erase_idx < num_elements());
+
+			if (erase_idx < get_selection_index()
+					|| (get_selection_index() == num_elements() - 1 && get_selection_index() > 0)) {
+				set_selection_index(get_selection_index() - 1);
+			}
+			items.erase(items.begin() + erase_idx);
+		}
+
+		void push_back(const todo::Item& item) {
+			items.push_back(item);
+		}
+
+		void insert(const size_t idx, const todo::Item& item) {
+			items.insert(items.begin() + idx, item);
+		}
 
 	private:
 };
@@ -125,13 +146,24 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 		case 'q':
 			running = false;
 			return;
+		case 'i':
+			list_model->insert(list_model->get_selection_index(), {});
+			return;
 		case 'a':
-			list_model->items.push_back({});
+			if (list_model->is_empty()) {
+				list_model->push_back({});
+			} else {
+				list_model->insert(list_model->get_selection_index() + 1, {});
+				list_model->set_selection_index(list_model->get_selection_index() + 1);
+			}
+			return;
+		case 'A':
+			list_model->push_back({});
 			return;
 		case 'x':
-			list_model->items.erase(
-					list_model->items.begin() + 
-					list_model->get_selection_index());
+		case 'd':
+			if (!list_model->is_empty())
+				list_model->erase(list_model->get_selection_index());
 			return;
 	}
 

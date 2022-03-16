@@ -3,6 +3,8 @@
 
 #include "twig_widget.hpp"
 
+#include <cassert>
+
 namespace twig::widget {
 
 	template<typename T> class ListModel {
@@ -10,18 +12,36 @@ namespace twig::widget {
 			ListModel() {}
 			virtual ~ListModel() {}
 
-			size_t get_selection_index() { return selection_index; }
+			size_t get_selection_index() {
+				return selection_index;
+			}
+
+			void set_selection_index(size_t idx) {
+				assert(idx <= num_elements());
+				selection_index = idx;
+			}
+
 			virtual size_t num_elements() = 0;
 			virtual T get_element(size_t idx) = 0;
 
+			bool is_empty() {
+				return num_elements() == 0;
+			}
+
 			void scroll_up(size_t magnitude = 1) {
+				const size_t num_elems = num_elements();
+				if (num_elems == 0) return;
+
 				if (selection_index >= magnitude) {
 					selection_index -= magnitude;
 				}
 			}
 
 			void scroll_down(size_t magnitude = 1) {
-				if (selection_index < num_elements() - magnitude) {
+				const size_t num_elems = num_elements();
+				if (num_elems == 0) return;
+
+				if (selection_index < num_elems - magnitude) {
 					selection_index += magnitude;
 				}
 			}
