@@ -1,5 +1,5 @@
-#include "os_helper.hpp"
-#include "except_helper.hpp"
+#include "twig_os.hpp"
+#include "twig_app.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -12,18 +12,38 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cerrno>
 
-char* OS::getenv(const char* var) {
+inline std::string comment_with_errno(const std::string &comment, int errorno) {
+	std::string ret = comment;
+
+	if (errno != 0) {
+		ret += ", errno=";
+		ret += std::to_string(errno);
+		ret += " ";
+		ret += std::strerror(errno);
+	}
+
+	return ret;
+}
+
+inline std::string comment_with_auto_errno(const std::string &comment) {
+	int my_errno = errno;
+	errno = 0;
+	return comment_with_errno(comment, my_errno);
+}
+
+char* twig::os::getenv(const char* var) {
 	return std::getenv(var);
 }
 
-std::optional<std::filesystem::path> OS::find_executable(const std::filesystem::path exe_name) {
+std::optional<std::filesystem::path> twig::os::find_executable(const std::filesystem::path exe_name) {
 
 	if (std::filesystem::exists(exe_name)) {
 		return exe_name;
 	}
 
-	const char* PATH_ENV = OS::getenv("PATH");
+	const char* PATH_ENV = twig::os::getenv("PATH");
 
 	if (PATH_ENV == nullptr) {
 		return std::nullopt;
@@ -50,13 +70,15 @@ std::optional<std::filesystem::path> OS::find_executable(const std::filesystem::
 	return std::nullopt;
 }
 
-using OS::Subprocess::subprocess_error;
+using twig::os::subprocess::subprocess_error;
 
-void OS::Subprocess::run(
+void twig::os::subprocess::run(
 		const char* path,
 		char* const* argv) {
 
 	pid_t pid;
+
+	twig::curses::exit();
 
 	if ((pid = fork()) == -1) {
 		throw subprocess_error("fork");
@@ -73,6 +95,8 @@ void OS::Subprocess::run(
 			throw new subprocess_error("waitpid");
 		}
 
+		twig::curses::init();
+
 		return;
 	}
 
@@ -85,11 +109,11 @@ void OS::Subprocess::run(
 	throw subprocess_error("execv");
 }
 
-void OS::Subprocess::open_editor(std::filesystem::path file) {
+void twig::os::subprocess::open_editor(std::filesystem::path file) {
 
 	std::filesystem::path editor;
 
-	const char* EDITOR_ENV = OS::getenv("EDITOR");
+	const char* EDITOR_ENV = twig::os::getenv("EDITOR");
 
 	if (EDITOR_ENV != nullptr) {
 		editor = EDITOR_ENV;
@@ -98,38 +122,35 @@ void OS::Subprocess::open_editor(std::filesystem::path file) {
 		editor = "vi"; 
 	}
 
-	std::optional<std::filesystem::path> editor_exe = OS::find_executable(editor);
+	std::optional<std::filesystem::path> editor_exe = twig::os::find_executable(editor);
 
-	if (editor_exe) {
-
-		// reusable
-		size_t size;
-
-		// get the exe's path into a char* as the first arg to the process
-		const std::string exe_path_string = (*editor_exe).string();
-		size = exe_path_string.size();
-		char arg0[size + 1];
-		std::strcpy(arg0, exe_path_string.c_str());
-		arg0[size] = 0;
-
-		// get the path as the second arg to the process
-		const std::string file_path_string = file.string();
-		size = file_path_string.size();
-		char arg1[size + 1];
-		std::strcpy(arg1, file_path_string.c_str());
-		arg1[size] = 0;
-
-		char *argv[3] { arg0, arg1, (char*) nullptr }; 
-		run(arg0, argv);
-
-		return;
-
+	if (!editor_exe) {
+		throw subprocess_error("editor not found: " + editor.string());
 	}
 
-	throw subprocess_error("editor not found: " + editor.string());
+	// reusable
+	size_t size;
+
+	// get the exe's path into a char* as the first arg to the process
+	const std::string exe_path_string = (*editor_exe).string();
+	size = exe_path_string.size();
+	char arg0[size + 1];
+	std::strcpy(arg0, exe_path_string.c_str());
+	arg0[size] = 0;
+
+	// get the path as the second arg to the process
+	const std::string file_path_string = file.string();
+	size = file_path_string.size();
+	char arg1[size + 1];
+	std::strcpy(arg1, file_path_string.c_str());
+	arg1[size] = 0;
+
+	char *argv[3] { arg0, arg1, (char*) nullptr }; 
+	run(arg0, argv);
+
 }
 
-std::string OS::Subprocess::open_editor_line(
+std::string twig::os::subprocess::open_editor_line(
 		const char* line,
 		const char* suffix,
 		const char* prefix) {
@@ -173,7 +194,7 @@ std::string OS::Subprocess::open_editor_line(
 		}
 
 		// open the user's editor
-		OS::Subprocess::open_editor((std::string) tmp_buffer);
+		twig::os::subprocess::open_editor((std::string) tmp_buffer);
 
 		// now read what they wrote to the file
 		// i've found we have to use the path rather than the file descriptor

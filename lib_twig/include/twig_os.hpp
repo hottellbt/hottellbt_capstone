@@ -1,18 +1,18 @@
-#ifndef INCLUDED_OS_HELPER_HPP
-#define INCLUDED_OS_HELPER_HPP
+#ifndef INCLUDED_TWIG_OS_HPP
+#define INCLUDED_TWIG_OS_HPP
 
 #include <optional>
 #include <string>
 #include <filesystem>
 #include <stdexcept>
 
-namespace OS {
+namespace twig::os {
 
 	char* getenv(const char* var);
 
 	std::optional<std::filesystem::path> find_executable(const std::filesystem::path name);
 
-	namespace Subprocess {
+	namespace subprocess {
 
 		class subprocess_error : public std::runtime_error {
 			public:
@@ -31,9 +31,10 @@ namespace OS {
 
 		inline std::string open_editor_line(const std::string &line) {
 			return open_editor_line(line.c_str());
-
 		}
+
 	}
+
 };
 
 #endif

@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstring>
 
-#include "os_helper.hpp"
 #include "unicode.hpp"
 #include "encoding.hpp"
 
@@ -13,6 +12,7 @@
 
 #include "twig_app.hpp"
 #include "twig_widget_list.hpp"
+#include "twig_os.hpp"
 
 using twig::widget::Widget;
 using twig::widget::Graphics;
@@ -33,6 +33,8 @@ class DemoListModel : public twig::widget::ListModel<todo::Item> {
 		size_t num_elements() { return items.size(); }
 
 		todo::Item get_element(size_t idx) { return items[idx]; }
+
+		todo::Item* get_element_ptr(size_t idx) { return &items[idx]; }
 
 		void erase(const size_t erase_idx) {
 			assert(num_elements() > 0);
@@ -170,6 +172,13 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 			if (!list_model->is_empty())
 				list_model->erase(list_model->get_selection_index());
 			return;
+		case 'c':
+			if (list_model->is_empty()) break;
+			auto* item = list_model->get_element_ptr(list_model->get_selection_index());
+			std::string encoded = encoding::encode(encoding::Encoding::UTF8, item->title);
+			std::string new_name = twig::os::subprocess::open_editor_line(encoded.c_str());
+			item->title = encoding::decode(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
+			break;
 	}
 
 	list_controller->when_typed(key);

@@ -115,7 +115,6 @@ def get_lib_capstone(makefile, home, bin_dir,
     test = os.path.join(home,  "test")
 
     for name in [
-            "os_helper",
             "todo",
             ]:
         lib.add_source_file(os.path.join(src, f"{name}.cpp"))
@@ -139,7 +138,8 @@ def get_lib_twig(makefile, home, bin_dir,
 
     for name in [
             "twig_color",
-            "twig_curses"
+            "twig_curses",
+            "twig_os_linux"
             ]:
         lib.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
