@@ -17,7 +17,7 @@ namespace twig::widget {
 			}
 
 			void set_selection_index(size_t idx) {
-				assert(idx <= num_elements());
+				assert(idx < num_elements());
 				selection_index = idx;
 			}
 
@@ -66,9 +66,11 @@ namespace twig::widget {
 						model->scroll_up();
 						break;
 					case 'g':
+					case '^':
 						model->home();
 						break;
 					case 'G':
+					case '$':
 						model->end();
 						break;
 				}

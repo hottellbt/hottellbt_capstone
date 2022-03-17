@@ -149,6 +149,10 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 		case 'i':
 			list_model->insert(list_model->get_selection_index(), {});
 			return;
+		case 'I':
+			list_model->insert(0, {});
+			list_model->set_selection_index(0);
+			return;
 		case 'a':
 			if (list_model->is_empty()) {
 				list_model->push_back({});
@@ -159,6 +163,7 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 			return;
 		case 'A':
 			list_model->push_back({});
+			list_model->set_selection_index(list_model->num_elements() - 1);
 			return;
 		case 'x':
 		case 'd':
