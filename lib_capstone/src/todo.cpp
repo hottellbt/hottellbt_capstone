@@ -20,10 +20,10 @@ const char* todo::to_string(const todo::Priority &p) {
 const char* todo::to_string(const Status &s) {
 	using S = todo::Status;
 	switch(s) {
-		case S::DOING:     return "Doing";
-		case S::NO_STATUS: return "None";
-		case S::DONE:      return "Done";
-		case S::CANCELED:  return "Canceled";
+		case S::NONE:        return "None";
+		case S::IN_PROGRESS: return "In Progress";
+		case S::DONE:        return "Done";
+		case S::CANCELED:    return "Canceled";
 	}
 	throw std::runtime_error(std::to_string((uint8_t) s));
 }

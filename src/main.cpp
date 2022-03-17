@@ -112,7 +112,22 @@ void DemoListPainter::draw_row(
 		bool add_brackets = bounds.width > 8;
 
 		if (add_brackets) g->add_ch('[');
-		g->add_ch(' ');
+
+		switch (value.status) {
+			case todo::Status::IN_PROGRESS:
+				g->add_ch('~');
+				break;
+			case todo::Status::DONE:
+				g->add_ch('@');
+				break;
+			case todo::Status::CANCELED:
+				g->add_ch('X');
+				break;
+			case todo::Status::NONE:
+			default:
+				g->add_ch(' ');
+				break;
+		}
 		if (add_brackets) g->add_ch(']');
 		g->add_ch(' ');
 
@@ -161,6 +176,8 @@ void MyTwigApp::when_typed_special(const twig::special_key& key) {
 }
 
 void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
+	todo::Item* item;
+
 	switch (key) {
 		case 'q':
 			running = false;
@@ -189,14 +206,19 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 			if (!list_model->is_empty())
 				list_model->erase(list_model->get_selection_index());
 			return;
+		case ']':
+			if (list_model->is_empty()) break;
+			item = list_model->get_element_ptr(list_model->get_selection_index());
+			item->status = todo::Status::IN_PROGRESS;
+			return;
 		case 'c':
 			if (list_model->is_empty()) break;
-			auto* item = list_model->get_element_ptr(list_model->get_selection_index());
+			item = list_model->get_element_ptr(list_model->get_selection_index());
 			std::string encoded = encoding::encode(encoding::Encoding::UTF8, item->title);
 			std::string new_name = twig::os::subprocess::open_editor_line(encoded.c_str());
 			auto decoded = encoding::decode(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
 			item->title = escape(decoded);
-			break;
+			return;
 	}
 
 	list_controller->when_typed(key);

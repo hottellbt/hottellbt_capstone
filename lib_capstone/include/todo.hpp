@@ -23,12 +23,12 @@ namespace todo {
 	};
 
 	enum Status : uint8_t {
-		DOING,
-		NO_STATUS,
+		NONE,
+		IN_PROGRESS,
 		DONE,
 		CANCELED,
 
-		DEFAULT = NO_STATUS,
+		DEFAULT = NONE,
 	};
 
 	class Item {
