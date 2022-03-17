@@ -173,7 +173,7 @@ std::string twig::os::subprocess::open_editor_line(
 	strncpy(tmp_buffer_idx, suffix, suffix_len);
 	tmp_buffer[tmp_buffer_len] = 0;
 
-	// invoke mkstemps
+	// invoke mkstemps to create a temp file
 	int fd = mkstemps(tmp_buffer, suffix_len);
 	if (fd == -1) {
 		std::string msg = "mkstemps ";

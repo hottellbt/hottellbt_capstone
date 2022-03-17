@@ -19,6 +19,23 @@ using twig::widget::Graphics;
 using twig::widget::WRect;
 using twig::widget::WDim;
 
+inline Unicode::string_t escape(const Unicode::string_t s) {
+	Unicode::string_t ret;
+
+	for (auto c : s) {
+		switch (c) {
+			case '\n':
+				ret.push_back('\\');
+				ret.push_back('n');
+				continue;
+			default:
+				ret.push_back(c);
+		}
+	}
+
+	return ret;
+}
+
 class DemoListModel : public twig::widget::ListModel<todo::Item> {
 	public:
 		DemoListModel() {
@@ -177,7 +194,8 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 			auto* item = list_model->get_element_ptr(list_model->get_selection_index());
 			std::string encoded = encoding::encode(encoding::Encoding::UTF8, item->title);
 			std::string new_name = twig::os::subprocess::open_editor_line(encoded.c_str());
-			item->title = encoding::decode(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
+			auto decoded = encoding::decode(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
+			item->title = escape(decoded);
 			break;
 	}
 
