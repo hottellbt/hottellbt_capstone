@@ -11,6 +11,7 @@
 #include "todo.hpp"
 
 #include "twig_app.hpp"
+#include "twig_widget_container.hpp"
 #include "twig_widget_list.hpp"
 #include "twig_os.hpp"
 
@@ -18,6 +19,7 @@ using twig::widget::Widget;
 using twig::widget::Graphics;
 using twig::widget::WRect;
 using twig::widget::WDim;
+using twig::widget::WInt;
 
 inline Unicode::string_t escape(const Unicode::string_t s) {
 	Unicode::string_t ret;
@@ -148,6 +150,57 @@ void DemoListPainter::draw_row(
 	}
 }
 
+class SplitContainer : public Widget {
+	public:
+		SplitContainer() {}
+		~SplitContainer() {}
+
+		void repaint() override {
+			auto& g = get_graphics();
+			const WDim bounds = g->get_size();
+
+			g->clear_fast();
+
+			WInt half_width = bounds.width / 2;
+
+			if (left_widget != nullptr) {
+				left_widget->repaint();
+				g->subgraphics({0,0}, left_widget->get_graphics());
+			}
+
+			if (right_widget != nullptr) {
+				right_widget->repaint();
+				g->subgraphics({half_width, 0}, right_widget->get_graphics());
+			}
+		}
+
+		void when_resized(const WDim& new_size) override {
+			WInt half_width = (WInt) (new_size.width / 2);
+
+			if (left_widget != nullptr) {
+				WDim left_bounds = {
+					half_width,
+					new_size.height
+				};
+				left_widget->set_size(left_bounds);
+			}
+
+			if (right_widget != nullptr) {
+				WDim right_bounds = {
+					(WInt) (new_size.width-half_width),
+					new_size.height
+				};
+				right_widget->set_size(right_bounds);
+			}
+		}
+
+
+		Widget* left_widget = nullptr;
+		Widget* right_widget = nullptr;
+};
+
+SplitContainer *split_container = new SplitContainer();
+
 DemoListModel *list_model = new DemoListModel();
 
 DemoListPainter *list_view = new DemoListPainter(list_model);
@@ -160,7 +213,7 @@ class MyTwigApp : public twig::TwigApp {
 	public:
 		bool is_running() override { return this->running; }
 
-		Widget* get_root_widget() { return list_view; }
+		Widget* get_root_widget() { return split_container; }
 
 		void when_typed(const Unicode::codepoint_t& input) override;
 
@@ -226,6 +279,7 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 
 int main() {
 	MyTwigApp app;
+	split_container->left_widget = list_view;
 	return twig::curses::run_twig_app(&app);
 }
 

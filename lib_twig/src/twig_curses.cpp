@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <queue>
 
 #include <cerrno>
 #include <cstring>
@@ -50,17 +51,27 @@ using twig::widget::WPoint;
 
 using twig::color::ColorPair;
 
-Graphics::~Graphics() {
-	if (magic != nullptr && magic != stdscr) {
-		delwin((WINDOW*) magic);
-	}
+void Graphics::delmagic(void) {
+	assert(magic != stdscr);
+	if (magic != nullptr) delwin((WINDOW*) magic);
 }
 
-void Graphics::when_owner_resized(const WDim& new_size) {
-	if (magic == nullptr) {
-		magic = newpad(new_size.height, new_size.width);
-	} else {
+void Graphics::set_parent(const std::unique_ptr<Graphics>& parent) {
+	delmagic();
+	WDim size = get_size();
+	magic = newpad(size.height, size.width);
+}
+
+void Graphics::set_no_parent(void) {
+	delmagic();
+	WDim size = get_size();
+	magic = newpad(size.height, size.width);
+}
+
+void Graphics::resize(const WDim& new_size) {
+	if (magic != nullptr) {
 		wresize((WINDOW*) magic, new_size.height, new_size.width);
+		magic = newpad(new_size.height, new_size.width);
 	}
 }
 
@@ -76,6 +87,26 @@ WPoint Graphics::get_position(void) {
 	WInt y, x;
 	getyx((WINDOW*) magic, y, x);
 	return {x, y};
+}
+
+void Graphics::subgraphics(
+		const WPoint& position,
+		const std::unique_ptr<Graphics>& g) {
+
+	assert(magic != nullptr);
+	assert(g != nullptr);
+	assert(g->magic != nullptr);
+
+	WDim g_size = g->get_size();
+
+	pnoutrefresh(
+			(WINDOW*) magic,
+			position.y,
+			position.x,
+			0,
+			0,
+			g_size.width,
+			g_size.height);
 }
 
 void Graphics::clear_fast(void) {
@@ -196,13 +227,12 @@ inline void do_repaint(twig::TwigApp *app) {
 	assert(app != nullptr);
 
 	Widget* root_widget = app->get_root_widget();
-
 	assert(root_widget != nullptr);
-
-	root_widget->repaint();
 
 	WDim root_dim = root_widget->get_size();
 	WPoint root_ul = root_widget->get_position();
+
+	root_widget->repaint();
 
 	void* magic = root_widget->get_graphics()->magic;
 	assert(magic != nullptr);
