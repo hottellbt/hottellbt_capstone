@@ -52,61 +52,23 @@ using twig::widget::WPoint;
 using twig::color::ColorPair;
 
 void Graphics::delmagic(void) {
-	assert(magic != stdscr);
-	if (magic != nullptr) delwin((WINDOW*) magic);
+	if (magic != nullptr && magic != stdscr) delwin((WINDOW*) magic);
 }
 
-void Graphics::set_parent(const std::unique_ptr<Graphics>& parent) {
-	delmagic();
-	WDim size = get_size();
-	magic = newpad(size.height, size.width);
-}
-
-void Graphics::set_no_parent(void) {
-	delmagic();
-	WDim size = get_size();
-	magic = newpad(size.height, size.width);
-}
-
-void Graphics::resize(const WDim& new_size) {
-	if (magic != nullptr) {
-		wresize((WINDOW*) magic, new_size.height, new_size.width);
-		magic = newpad(new_size.height, new_size.width);
-	}
-}
-
+/*
 WDim Graphics::get_size(void) {
 	assert(magic != nullptr);
 	WInt y, x;
 	getmaxyx((WINDOW*) magic, y, x);
 	return {x, y};
 }
+*/
 
 WPoint Graphics::get_position(void) {
 	assert(magic != nullptr);
 	WInt y, x;
 	getyx((WINDOW*) magic, y, x);
 	return {x, y};
-}
-
-void Graphics::subgraphics(
-		const WPoint& position,
-		const std::unique_ptr<Graphics>& g) {
-
-	assert(magic != nullptr);
-	assert(g != nullptr);
-	assert(g->magic != nullptr);
-
-	WDim g_size = g->get_size();
-
-	pnoutrefresh(
-			(WINDOW*) magic,
-			position.y,
-			position.x,
-			0,
-			0,
-			g_size.width,
-			g_size.height);
 }
 
 void Graphics::clear_fast(void) {
@@ -223,7 +185,7 @@ twig::special_key get_special_key(int curses_key) {
 	}
 }
 
-inline void do_repaint(twig::TwigApp *app) {
+inline void do_repaint(Graphics& g, twig::TwigApp *app) {
 	assert(app != nullptr);
 
 	Widget* root_widget = app->get_root_widget();
@@ -232,13 +194,10 @@ inline void do_repaint(twig::TwigApp *app) {
 	WDim root_dim = root_widget->get_size();
 	WPoint root_ul = root_widget->get_position();
 
-	root_widget->repaint();
-
-	void* magic = root_widget->get_graphics()->magic;
-	assert(magic != nullptr);
+	root_widget->paint(g);
 
 	pnoutrefresh(
-			(WINDOW*) magic,
+			(WINDOW*) g.magic,
 			0,
 			0,
 			root_ul.y,
@@ -281,8 +240,10 @@ int twig::curses::run_twig_app(TwigApp *app) {
 
 		twig::curses::init();
 
+		Graphics g ( stdscr );
+
 		do_resize(app);
-		do_repaint(app);
+		do_repaint(g, app);
 
 		int ch;
 
@@ -307,7 +268,7 @@ int twig::curses::run_twig_app(TwigApp *app) {
 				app->when_typed_special(get_special_key(ch));
 			}
 
-			do_repaint(app);
+			do_repaint(g, app);
 
 		}
 

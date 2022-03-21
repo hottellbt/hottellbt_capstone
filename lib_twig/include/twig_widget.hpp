@@ -28,16 +28,11 @@ namespace twig::widget {
 		public:
 			void* magic;
 
-			Graphics() : Graphics(nullptr) {}
-			Graphics(void* magic) : magic(magic) {}
+			Graphics() : magic(nullptr) {}
+			Graphics(void* magic) : magic(magic) { assert(magic != nullptr); }
 			~Graphics() { delmagic(); }
 
-			WDim get_size(void);
 			WPoint get_position(void);
-
-			void subgraphics(
-					const WPoint& on_screen,
-					const std::unique_ptr<Graphics>& g);
 
 			void clear_fast(void);
 			void clear_full(void);
@@ -136,8 +131,6 @@ namespace twig::widget {
 
 			void resize(const WDim& new_size);
 
-			void set_parent(const std::unique_ptr<Graphics>& parent);
-
 			void set_no_parent(void);
 
 			inline unsigned short get_str_width(Unicode::codepoint_t cp) {
@@ -171,17 +164,11 @@ namespace twig::widget {
 
 	class Widget {
 		public:
-			Widget() {
-				graphics = std::unique_ptr<Graphics>(new Graphics());
-			}
+			Widget() {}
 
 			virtual ~Widget() {}
 
-			std::unique_ptr<Graphics>& get_graphics(void) {
-				return graphics;
-			}
-
-			virtual void repaint() = 0;
+			virtual void paint(Graphics& g) = 0;
 
 			WPoint& get_position(void) { return position; }
 
@@ -190,25 +177,20 @@ namespace twig::widget {
 			void set_position(const WPoint& x) { position = x; }
 
 			void set_size(const WDim& new_size) {
-
 				assert(new_size.width > 0 && new_size.height > 0);
 
 				if (size != new_size) {
 					size = new_size;
-					graphics->resize(new_size);
+					this->when_resized(new_size);
 				}
-
-				this->when_resized(new_size);
 			}
 
 		protected:
-
 			virtual void when_resized(const WDim& new_size) {}
 
 		private:
 			WPoint position {0, 0};
 			WDim size {0, 0};
-			std::unique_ptr<Graphics> graphics = nullptr;
 	};
 }
 

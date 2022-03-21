@@ -20,6 +20,7 @@ using twig::widget::Graphics;
 using twig::widget::WRect;
 using twig::widget::WDim;
 using twig::widget::WInt;
+using twig::widget::WPoint;
 
 inline Unicode::string_t escape(const Unicode::string_t s) {
 	Unicode::string_t ret;
@@ -83,7 +84,7 @@ class DemoListPainter : public twig::widget::ListPainter<todo::Item> {
 
 	protected:
 		void draw_row(
-				std::unique_ptr<Graphics>& g,
+				Graphics& g,
 				const WRect& bounds,
 				const todo::Item& value,
 				size_t index,
@@ -91,7 +92,7 @@ class DemoListPainter : public twig::widget::ListPainter<todo::Item> {
 };
 
 void DemoListPainter::draw_row(
-		std::unique_ptr<Graphics>& g,
+		Graphics& g,
 		const WRect& bounds,
 		const todo::Item& value,
 		size_t index,
@@ -102,51 +103,51 @@ void DemoListPainter::draw_row(
 	bool highlight = index == model->get_selection_index();
 
 	if (highlight) { 
-		g->set_standout(true);
-		g->set_bold(true);
+		g.set_standout(true);
+		g.set_bold(true);
 	}
 
 	auto x = bounds.x;
 	auto y = bounds.y;
-	g->mv(x, y);
+	g.mv(x, y);
 
 	if (bounds.width > 6) {
 		bool add_brackets = bounds.width > 8;
 
-		if (add_brackets) g->add_ch('[');
+		if (add_brackets) g.add_ch('[');
 
 		switch (value.status) {
 			case todo::Status::IN_PROGRESS:
-				g->add_ch('~');
+				g.add_ch('~');
 				break;
 			case todo::Status::DONE:
-				g->add_ch('@');
+				g.add_ch('@');
 				break;
 			case todo::Status::CANCELED:
-				g->add_ch('X');
+				g.add_ch('X');
 				break;
 			case todo::Status::NONE:
 			default:
-				g->add_ch(' ');
+				g.add_ch(' ');
 				break;
 		}
-		if (add_brackets) g->add_ch(']');
-		g->add_ch(' ');
+		if (add_brackets) g.add_ch(']');
+		g.add_ch(' ');
 
 		if (add_brackets) x += 4;
 		else x += 2;
 	}
 
-	g->add_unicode_str(value.title);
-	x += g->get_str_width(value.title);
+	g.add_unicode_str(value.title);
+	x += g.get_str_width(value.title);
 
 	for (; x < bounds.width; x++) {
-		g->add_ch(' ');
+		g.add_ch(' ');
 	}
 
 	if (highlight) {
-		g->set_standout(false);
-		g->set_bold(false);
+		g.set_standout(false);
+		g.set_bold(false);
 	}
 }
 
@@ -155,22 +156,15 @@ class SplitContainer : public Widget {
 		SplitContainer() {}
 		~SplitContainer() {}
 
-		void repaint() override {
-			auto& g = get_graphics();
-			const WDim bounds = g->get_size();
-
-			g->clear_fast();
-
-			WInt half_width = bounds.width / 2;
+		void paint(Graphics& g) override {
+			g.clear_fast();
 
 			if (left_widget != nullptr) {
-				left_widget->repaint();
-				g->subgraphics({0,0}, left_widget->get_graphics());
+				left_widget->paint(g);
 			}
 
 			if (right_widget != nullptr) {
-				right_widget->repaint();
-				g->subgraphics({half_width, 0}, right_widget->get_graphics());
+				right_widget->paint(g);
 			}
 		}
 
@@ -178,26 +172,45 @@ class SplitContainer : public Widget {
 			WInt half_width = (WInt) (new_size.width / 2);
 
 			if (left_widget != nullptr) {
-				WDim left_bounds = {
+				left_widget->set_position({0, 0});
+				left_widget->set_size({
 					half_width,
 					new_size.height
-				};
-				left_widget->set_size(left_bounds);
+				});
 			}
 
 			if (right_widget != nullptr) {
-				WDim right_bounds = {
+				right_widget->set_position({half_width, 0});
+				right_widget->set_size({
 					(WInt) (new_size.width-half_width),
 					new_size.height
-				};
-				right_widget->set_size(right_bounds);
+				});
 			}
 		}
-
 
 		Widget* left_widget = nullptr;
 		Widget* right_widget = nullptr;
 };
+
+class DebugWidget : public Widget {
+	public:
+		DebugWidget() {}
+		~DebugWidget() {}
+
+		void paint(Graphics& g) override {
+			WPoint pos = get_position();
+			WDim size = get_size();
+
+			for (auto y = 0; y < size.height; y++) {
+				g.mv(pos.x, pos.y + y);
+				for (auto x = 0; x < size.width; x++) {
+					g.add_ch('%');
+				}
+			}
+		}
+};
+
+DebugWidget *debug_widget = new DebugWidget();
 
 SplitContainer *split_container = new SplitContainer();
 
@@ -218,6 +231,11 @@ class MyTwigApp : public twig::TwigApp {
 		void when_typed(const Unicode::codepoint_t& input) override;
 
 		void when_typed_special(const twig::special_key& key) override;
+
+		void when_starting() override {
+			split_container->left_widget = list_view;
+			split_container->right_widget = debug_widget;
+		}
 
 	private:
 		bool running = true;
@@ -279,7 +297,6 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 
 int main() {
 	MyTwigApp app;
-	split_container->left_widget = list_view;
 	return twig::curses::run_twig_app(&app);
 }
 
