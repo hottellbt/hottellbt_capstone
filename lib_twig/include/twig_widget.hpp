@@ -185,10 +185,19 @@ namespace twig::widget {
 				}
 			}
 
+			void set_visible(bool visible) {
+				this->visible = visible;
+			}
+
+			bool is_visible(void) const {
+				return this->visible;
+			}
+
 		protected:
 			virtual void when_resized(const WDim& new_size) {}
 
 		private:
+			bool visible = true;
 			WPoint position {0, 0};
 			WDim size {0, 0};
 	};

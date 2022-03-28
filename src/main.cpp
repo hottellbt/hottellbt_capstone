@@ -39,6 +39,47 @@ inline Unicode::string_t escape(const Unicode::string_t s) {
 	return ret;
 }
 
+class DesktopWidget : public Widget {
+	public:
+		DesktopWidget() {}
+		~DesktopWidget() {}
+
+		void paint(Graphics& g) override {
+			g.clear_fast();
+
+			if (left_widget != nullptr) {
+				left_widget->paint(g);
+			}
+
+			if (right_widget != nullptr) {
+				right_widget->paint(g);
+			}
+		}
+
+		void when_resized(const WDim& new_size) override {
+			WInt half_width = (WInt) (new_size.width / 2);
+
+			if (left_widget != nullptr) {
+				left_widget->set_position({0, 0});
+				left_widget->set_size({
+					half_width,
+					new_size.height
+				});
+			}
+
+			if (right_widget != nullptr) {
+				right_widget->set_position({half_width, 0});
+				right_widget->set_size({
+					(WInt) (new_size.width-half_width),
+					new_size.height
+				});
+			}
+		}
+
+		Widget* left_widget = nullptr;
+		Widget* right_widget = nullptr;
+};
+
 class DemoListModel : public twig::widget::ListModel<todo::Item> {
 	public:
 		DemoListModel() {
@@ -151,50 +192,11 @@ void DemoListPainter::draw_row(
 	}
 }
 
-class SplitContainer : public Widget {
-	public:
-		SplitContainer() {}
-		~SplitContainer() {}
-
-		void paint(Graphics& g) override {
-			g.clear_fast();
-
-			if (left_widget != nullptr) {
-				left_widget->paint(g);
-			}
-
-			if (right_widget != nullptr) {
-				right_widget->paint(g);
-			}
-		}
-
-		void when_resized(const WDim& new_size) override {
-			WInt half_width = (WInt) (new_size.width / 2);
-
-			if (left_widget != nullptr) {
-				left_widget->set_position({0, 0});
-				left_widget->set_size({
-					half_width,
-					new_size.height
-				});
-			}
-
-			if (right_widget != nullptr) {
-				right_widget->set_position({half_width, 0});
-				right_widget->set_size({
-					(WInt) (new_size.width-half_width),
-					new_size.height
-				});
-			}
-		}
-
-		Widget* left_widget = nullptr;
-		Widget* right_widget = nullptr;
-};
-
 class DebugWidget : public Widget {
+	private:
+		char c;
 	public:
-		DebugWidget() {}
+		DebugWidget(char c) : c(c) {}
 		~DebugWidget() {}
 
 		void paint(Graphics& g) override {
@@ -204,15 +206,15 @@ class DebugWidget : public Widget {
 			for (auto y = 0; y < size.height; y++) {
 				g.mv(pos.x, pos.y + y);
 				for (auto x = 0; x < size.width; x++) {
-					g.add_ch('%');
+					g.add_ch(c);
 				}
 			}
 		}
 };
 
-DebugWidget *debug_widget = new DebugWidget();
+DebugWidget *debug_widget = new DebugWidget('%');
 
-SplitContainer *split_container = new SplitContainer();
+DesktopWidget *desktop = new DesktopWidget();
 
 DemoListModel *list_model = new DemoListModel();
 
@@ -226,15 +228,15 @@ class MyTwigApp : public twig::TwigApp {
 	public:
 		bool is_running() override { return this->running; }
 
-		Widget* get_root_widget() { return split_container; }
+		Widget* get_root_widget() { return desktop; }
 
 		void when_typed(const Unicode::codepoint_t& input) override;
 
 		void when_typed_special(const twig::special_key& key) override;
 
 		void when_starting() override {
-			split_container->left_widget = list_view;
-			split_container->right_widget = debug_widget;
+			desktop->left_widget = list_view;
+			desktop->right_widget = debug_widget;
 		}
 
 	private:
