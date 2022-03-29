@@ -1,14 +1,15 @@
 #include <string>
 
 #include <cstdlib>
+#include <cstdint>
 
 #include "unicode.hpp"
 #include "encoding.hpp"
 
 struct ucs2_state {
 	bool little_endian;
-	bool has_saved_byte;
-	char saved_byte;
+	uint_fast8_t num_bytes;
+	uint8_t bytes[2];
 };
 
 encoding::ErrorCode encoding::ucs2_decode_start(void** state_ptr, bool little_endian) noexcept {
@@ -18,8 +19,8 @@ encoding::ErrorCode encoding::ucs2_decode_start(void** state_ptr, bool little_en
 	if (state == NULL) return encoding::E_MEMORY;
 
 	state->little_endian = little_endian;
-	state->has_saved_byte = false;
-	// saved_byte is left undefined
+	state->num_bytes = 0;
+	// saved_bytes are left undefined
 
 	return encoding::E_OK;
 }
@@ -29,39 +30,31 @@ encoding::ErrorCode encoding::ucs2_decode_part(
 		const char *input,
 		const size_t input_len,
 		Unicode::string_t* ustr) noexcept {
+
 	ucs2_state* state = (ucs2_state*) state_ptr;
 
-	size_t bytes_pos = 0;
-	char bytes[2];
-
-	if (state->has_saved_byte) {
-		bytes[0] = state->saved_byte;
-		bytes_pos++;
-		state->has_saved_byte = false;
-	}
-
 	for (size_t input_pos = 0; input_pos < input_len; input_pos++) {
-		bytes[bytes_pos++] = input[input_pos];
 
-		if (bytes_pos == 2) {
-			uint8_t b1 = bytes[0];
-			uint8_t b2 = bytes[1];
+		state->bytes[state->num_bytes++] = input[input_pos];
+
+		if (state->num_bytes == 2) {
+
+			const uint8_t b1 = state->bytes[0];
+			const uint8_t b2 = state->bytes[1];
 			Unicode::codepoint_t cp = (b1 << 8) | b2;
-
 			ustr->push_back(cp);
-			bytes_pos = 0;
-		}
-	}
 
-	if (bytes_pos == 1) {
-		state->saved_byte = bytes[0];
-		state->has_saved_byte = true;
+			state->num_bytes = 0;
+		}
+
 	}
 
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode ucs2_decode_end(void* state) noexcept {
+encoding::ErrorCode ucs2_decode_end(void* state_ptr) noexcept {
+	ucs2_state* state = (ucs2_state*) state_ptr;
+	if (state->num_bytes != 0) return encoding::E_BADEND;
 	return encoding::E_OK;
 }
 
