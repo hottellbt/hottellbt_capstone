@@ -3,116 +3,183 @@
 
 #include "unicode.hpp"
 
-#include <memory>
-#include <stdexcept>
 #include <cstdint>
+#include <cstring>
+#include <cassert>
+#include <cstdlib>
+
+#include <stdexcept>
 #include <string>
 
 namespace encoding {
 
-	class encoding_error : public std::runtime_error {
-		public:
-			encoding_error(const std::string &msg) : runtime_error(msg) {}
-	};
+	typedef int ErrorCode;
 
-	class decoding_error : public std::runtime_error {
-		public:
-			decoding_error(const std::string &msg) : runtime_error(msg) {}
-	};
+	constexpr ErrorCode E_OK = 0;       // there is no error
+	constexpr ErrorCode E_NEVER = 1;    // programming error, shouldn't ever happen
+	constexpr ErrorCode E_MEMORY = 2;   // malloc/realloc/calloc failed
+	constexpr ErrorCode E_BADEND = 3;   // ended too soon, expected more bytes, etc.
+	constexpr ErrorCode E_CANTREP = 4;  // can't represent an otherwise legal codepoint in this encoding
+	constexpr ErrorCode E_GROUP = 5;    // malformed group of bytes (or surrogate pair)
+	constexpr ErrorCode E_CPOOB = 6;    // codepoint out of bounds (i.e. above the maximum codepoint value)
 
-	enum class Encoding : uint8_t {
+	ErrorCode ucs2_decode_start  (void** state, bool little_endian) noexcept;
+	ErrorCode utf8_decode_start  (void** state)                     noexcept;
+	ErrorCode utf16_decode_start (void** state, bool little_endian) noexcept;
+	ErrorCode utf32_decode_start (void** state, bool little_endian) noexcept;
+
+	ErrorCode ucs2_decode_part  (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
+	ErrorCode utf8_decode_part  (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
+	ErrorCode utf16_decode_part (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
+	ErrorCode utf32_decode_part (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
+
+	// the end functions do not call free on the void*, which might still be the caller's responsibility
+	ErrorCode ucs2_decode_end  (void* state) noexcept;
+	ErrorCode utf8_decode_end  (void* state) noexcept;
+	ErrorCode utf16_decode_end (void* state) noexcept;
+	ErrorCode utf32_decode_end (void* state) noexcept;
+
+	ErrorCode ucs2_encode  (const Unicode::string_t* ustr, std::string* estr) noexcept;
+	ErrorCode utf8_encode  (const Unicode::string_t* ustr, std::string* estr) noexcept;
+	ErrorCode utf16_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
+	ErrorCode utf32_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
+
+	enum class Encoding {
+		UCS2LE,
+		UCS2BE,
 		UTF8,
-		UCS2
+		UTF16LE,
+		UTF16BE,
+		UTF32LE,
+		UTF32BE,
 	};
 
 	const char* to_string(const Encoding e);
 
-	class BufferedDecoder {
-		public:
-
-			virtual ~BufferedDecoder(void) {}
-
-			virtual Encoding get_encoding() const noexcept = 0;
-
-			virtual Unicode::string_t decode(const char *bytes, const size_t bytes_len) = 0;
-
-			virtual Unicode::string_t decode(char byte) { return decode(&byte, 1); }
-
-			virtual bool can_end() { return true; }
-
-			virtual void end() {
-				if (!can_end()) {
-					throw decoding_error((std::string) to_string(this->get_encoding()) 
-							+ ": Incomplete byte sequence");
-				}
-			}
-	};
-
-	namespace UTF8 {
-
-		class UTF8BufferedDecoder : public BufferedDecoder {
-			public:
-				Encoding get_encoding() const noexcept override { return Encoding::UTF8; }
-				Unicode::string_t decode(const char *bytes, const size_t bytes_len) override;
-				bool can_end() override { return codepoint_pos == 0; }
-
-			private:
-				Unicode::codepoint_t codepoint;
-				uint_fast8_t codepoint_pos = 0;
-				uint_fast8_t codepoint_len = 0;
-		};
-
-		std::string encode(const Unicode::string_t &s);
-
-	};
-
-	namespace UCS2 {
-
-		class UCS2BufferedDecoder : public BufferedDecoder {
-			public:
-				Encoding get_encoding() const noexcept override { return Encoding::UCS2; }
-				Unicode::string_t decode(const char *bytes, const size_t bytes_len) override;
-				bool can_end() override { return !has_saved_byte; }
-			private:
-				bool has_saved_byte = false;
-				char saved_byte;
-		};
-
-		std::string encode(const Unicode::string_t &s);
-
-	};
-
-	inline std::unique_ptr<BufferedDecoder> get_decoder(Encoding e) {
+	inline ErrorCode auto_decode_start(const Encoding e, void** state) noexcept {
+		using X = encoding::Encoding;
 		switch (e) {
-
-			case Encoding::UTF8: return std::make_unique<UTF8::UTF8BufferedDecoder>();
-			case Encoding::UCS2: return std::make_unique<UCS2::UCS2BufferedDecoder>();
-
-			default: break;
+			case X::UTF8:    return utf8_decode_start (state);
+			case X::UCS2LE:  return ucs2_decode_start (state, true);
+			case X::UCS2BE:  return ucs2_decode_start (state, false);
+			case X::UTF16LE: return utf16_decode_start(state, true);
+			case X::UTF16BE: return utf16_decode_start(state, false);
+			case X::UTF32LE: return utf32_decode_start(state, true);
+			case X::UTF32BE: return utf32_decode_start(state, false);
 		}
-		throw std::runtime_error((std::string) "Not supported: " + to_string(e));
+		assert(false);
+		return E_NEVER;
 	}
 
-	inline Unicode::string_t decode(const Encoding e, const char* bytes, const size_t num_bytes) {
-		auto decoder = get_decoder(e);
-		auto ret = decoder->decode(bytes, num_bytes);
-		decoder->end();
+	inline ErrorCode auto_decode_part(const Encoding e, void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept {
+		using X = encoding::Encoding;
+		switch (e) {
+			case X::UTF8:    return utf8_decode_part (state, data, data_len, ustr);
+			case X::UCS2LE:  return ucs2_decode_part (state, data, data_len, ustr);
+			case X::UCS2BE:  return ucs2_decode_part (state, data, data_len, ustr);
+			case X::UTF16LE: return utf16_decode_part(state, data, data_len, ustr);
+			case X::UTF16BE: return utf16_decode_part(state, data, data_len, ustr);
+			case X::UTF32LE: return utf32_decode_part(state, data, data_len, ustr);
+			case X::UTF32BE: return utf32_decode_part(state, data, data_len, ustr);
+		}
+		assert(false);
+		return E_NEVER;
+	}
+
+	inline ErrorCode auto_decode_end(const Encoding e, void* state) noexcept {
+		using X = encoding::Encoding;
+		switch (e) {
+			case X::UTF8:    return utf8_decode_end (state);
+			case X::UCS2LE:  return ucs2_decode_end (state);
+			case X::UCS2BE:  return ucs2_decode_end (state);
+			case X::UTF16LE: return utf16_decode_end(state);
+			case X::UTF16BE: return utf16_decode_end(state);
+			case X::UTF32LE: return utf32_decode_end(state);
+			case X::UTF32BE: return utf32_decode_end(state);
+		}
+		assert(false);
+		return E_NEVER;
+	}
+
+	/*
+		Goes through the entire decoding process, handling error codes along the way.
+	*/
+	inline ErrorCode auto_decode(
+			const Encoding e,
+			const char* data,
+			const size_t data_len,
+			Unicode::string_t* ustr) noexcept {
+
+		int status;
+		void* state = NULL;
+
+		status = auto_decode_start(e, &state);
+		if (status == E_OK) status = auto_decode_part(e, state, data, data_len, ustr);
+		if (status == E_OK) status = auto_decode_end(e, state);
+
+		free(state);
+
+		return status;
+	}
+
+	inline ErrorCode auto_encode(
+			const Encoding e,
+			const Unicode::string_t* ustr,
+			std::string* estr) noexcept {
+		using X = encoding::Encoding;
+		switch (e) {
+			case X::UTF8:    return utf8_encode (ustr, estr);
+			case X::UCS2LE:  return ucs2_encode (ustr, estr);
+			case X::UCS2BE:  return ucs2_encode (ustr, estr);
+			case X::UTF16LE: return utf16_encode(ustr, estr);
+			case X::UTF16BE: return utf16_encode(ustr, estr);
+			case X::UTF32LE: return utf32_encode(ustr, estr);
+			case X::UTF32BE: return utf32_encode(ustr, estr);
+		}
+		assert(false);
+		return E_NEVER;
+	}
+
+	class EncodingError : public std::runtime_error {
+		public:
+			EncodingError(const std::string &msg) : runtime_error(msg) {}
+	};
+
+	inline Unicode::string_t auto_decode_or_throw(
+			const Encoding e,
+			const char* data,
+			const size_t data_len) {
+
+		Unicode::string_t ret;
+		int status = auto_decode(e, data, data_len, &ret);
+		if (status != E_OK) {
+			throw EncodingError((std::string) "Failed to decode " + to_string(e) + ", error code " + std::to_string(status));
+		}
 		return ret;
 	}
 
-	inline std::string encode(const Encoding e, const Unicode::string_t &s) {
-		switch (e) {
+	inline std::string auto_encode_or_throw(
+			const Encoding e,
+			const Unicode::string_t* ustr) {
 
-			case Encoding::UTF8: return UTF8::encode(s);
-			case Encoding::UCS2: return UCS2::encode(s);
-
-			default: break;
+		std::string ret;
+		int status = auto_encode(e, ustr, &ret);
+		if (status != E_OK) {
+			throw EncodingError((std::string) "Failed to encode " + to_string(e) + ", error code " + std::to_string(status));
 		}
-		throw std::runtime_error((std::string) "Not supported: " + to_string(e));
+		return ret;
 	}
 
-	inline Unicode::string_t decode_literal(const std::string &s) {
-		return decode(Encoding::UTF8, s.c_str(), s.size());
+	inline Unicode::string_t decode_literal(const char* data, size_t len) {
+		return auto_decode_or_throw(Encoding::UTF8, data, len);
+	}
+
+	inline Unicode::string_t decode_literal(const char* data) {
+		return decode_literal(data, strlen(data));
+	}
+
+	inline Unicode::string_t decode_literal(const std::string& str) {
+		return decode_literal(str.c_str(), str.size());
 	}
 }
 

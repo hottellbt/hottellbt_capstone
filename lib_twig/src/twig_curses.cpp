@@ -171,9 +171,6 @@ void Graphics::set_italic(const bool b) {
 	else   wattroff((WINDOW*) magic, A_ITALIC);  
 }
 
-// FIXME here we assume the terminal is in UTF-8
-auto decoder = encoding::get_decoder(encoding::Encoding::UTF8);
-
 twig::special_key get_special_key(int curses_key) {
 	using X = twig::special_key;
 
@@ -245,6 +242,16 @@ int twig::curses::run_twig_app(TwigApp *app) {
 		throw std::runtime_error("root widget cannot be null");
 	}
 
+	// FIXME here we assume the terminal is in UTF-8
+	encoding::Encoding terminal_encoding = encoding::Encoding::UTF8;
+	void* decoder_state = NULL;
+	auto decoder_err = encoding::E_OK;
+	decoder_err = encoding::auto_decode_start(terminal_encoding, &decoder_state);
+
+	if (decoder_err != encoding::E_OK) {
+		throw std::runtime_error("Couldn't initialize decoder for the terminal");
+	}
+
 	try {
 
 		app->when_starting();
@@ -264,10 +271,24 @@ int twig::curses::run_twig_app(TwigApp *app) {
 				app->when_no_event();
 
 			} else if (ch >= 0 && ch <= 0xFF) {
+
+				Unicode::string_t typed_str;
 				char ch_real = (char) ch;
-				Unicode::string_t s = decoder->decode(&ch_real, 1);
-				for(auto cp : s) {
-					app->when_typed(cp);
+
+				decoder_err = encoding::auto_decode_part(
+						terminal_encoding, &decoder_state, &ch_real, 1, &typed_str);
+
+				if (decoder_err != encoding::E_OK) {
+					// ignore and reset
+					decoder_err = encoding::auto_decode_start(terminal_encoding, &decoder_state);
+					if (decoder_err != encoding::E_OK) {
+						throw std::runtime_error("Couldn't initialize decoder for the terminal");
+					}
+
+				} else {
+					for(auto cp : typed_str) {
+						app->when_typed(cp);
+					}
 				}
 
 			} else if (ch == KEY_RESIZE) {

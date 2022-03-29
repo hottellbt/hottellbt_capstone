@@ -1,22 +1,43 @@
 #include <string>
 
+#include <cstdlib>
+
 #include "unicode.hpp"
 #include "encoding.hpp"
 
+struct ucs2_state {
+	bool little_endian;
+	bool has_saved_byte;
+	char saved_byte;
+};
 
-Unicode::string_t encoding::UCS2::UCS2BufferedDecoder::decode(
+encoding::ErrorCode encoding::ucs2_decode_start(void** state_ptr, bool little_endian) noexcept {
+
+	ucs2_state* state = (ucs2_state*) realloc(*state_ptr, sizeof(ucs2_state));
+	*state_ptr = state;
+	if (state == NULL) return encoding::E_MEMORY;
+
+	state->little_endian = little_endian;
+	state->has_saved_byte = false;
+	// saved_byte is left undefined
+
+	return encoding::E_OK;
+}
+
+encoding::ErrorCode encoding::ucs2_decode_part(
+		void* state_ptr,
 		const char *input,
-		const size_t input_len) {
-
-	Unicode::string_t ret;
+		const size_t input_len,
+		Unicode::string_t* ustr) noexcept {
+	ucs2_state* state = (ucs2_state*) state_ptr;
 
 	size_t bytes_pos = 0;
 	char bytes[2];
 
-	if (has_saved_byte) {
-		bytes[0] = saved_byte;
+	if (state->has_saved_byte) {
+		bytes[0] = state->saved_byte;
 		bytes_pos++;
-		has_saved_byte = false;
+		state->has_saved_byte = false;
 	}
 
 	for (size_t input_pos = 0; input_pos < input_len; input_pos++) {
@@ -27,33 +48,35 @@ Unicode::string_t encoding::UCS2::UCS2BufferedDecoder::decode(
 			uint8_t b2 = bytes[1];
 			Unicode::codepoint_t cp = (b1 << 8) | b2;
 
-			ret.push_back(cp);
+			ustr->push_back(cp);
 			bytes_pos = 0;
 		}
 	}
 
 	if (bytes_pos == 1) {
-		saved_byte = bytes[0];
-		has_saved_byte = true;
+		state->saved_byte = bytes[0];
+		state->has_saved_byte = true;
 	}
 
-	return ret;
+	return encoding::E_OK;
 }
 
-std::string encoding::UCS2::encode(const Unicode::string_t &s) {
-	std::string ret;
-	ret.reserve(s.size() * 2);
+encoding::ErrorCode ucs2_decode_end(void* state) noexcept {
+	return encoding::E_OK;
+}
 
-	for (size_t i = 0; i < s.size(); i++) {
-		Unicode::codepoint_t cp = s[i];
+encoding::ErrorCode encoding::ucs2_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+
+	for (size_t i = 0; i < ustr->size(); i++) {
+		Unicode::codepoint_t cp = (*ustr)[i];
 
 		if (cp > 0xFFFF) {
-			throw encoding_error("UCS-2: Not supported: " + Unicode::to_string(cp));
+			return encoding::E_CANTREP;
 		}
 
-		ret.push_back((cp >> 8));
-		ret.push_back((cp & 0xFF));
+		estr->push_back((cp >> 8));
+		estr->push_back((cp & 0xFF));
 	}
 
-	return ret;
+	return encoding::E_OK;
 }

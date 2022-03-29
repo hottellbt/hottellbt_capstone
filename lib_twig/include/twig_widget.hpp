@@ -63,7 +63,7 @@ namespace twig::widget {
 			}
 
 			inline void add_unicode_str(const Unicode::string_t& str) {
-				add_str_raw(encoding::encode(encoding::Encoding::UTF8, str));
+				add_str_raw(encoding::auto_encode_or_throw(encoding::Encoding::UTF8, &str));
 			}
 
 			inline void add_str_utf8(const char* str, const size_t len) {

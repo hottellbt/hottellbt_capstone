@@ -214,9 +214,9 @@ void MyTwigApp::when_typed(const Unicode::codepoint_t& key) {
 		case 'c':
 			if (list_model->is_empty()) break;
 			item = list_model->get_element_ptr(list_model->get_selection_index());
-			std::string encoded = encoding::encode(encoding::Encoding::UTF8, item->title);
+			std::string encoded = encoding::auto_encode_or_throw(encoding::Encoding::UTF8, &item->title);
 			std::string new_name = twig::os::subprocess::open_editor_line(encoded.c_str());
-			auto decoded = encoding::decode(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
+			auto decoded = encoding::auto_decode_or_throw(encoding::Encoding::UTF8, new_name.c_str(), new_name.size());
 			item->title = escape(decoded);
 			return;
 	}
