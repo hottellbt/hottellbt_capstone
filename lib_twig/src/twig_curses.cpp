@@ -244,6 +244,7 @@ int twig::curses::run_twig_app(TwigApp *app) {
 
 	// FIXME here we assume the terminal is in UTF-8
 	encoding::Encoding terminal_encoding = encoding::Encoding::UTF8;
+
 	void* decoder_state = NULL;
 	auto decoder_err = encoding::E_OK;
 	decoder_err = encoding::auto_decode_start(terminal_encoding, &decoder_state);
@@ -276,14 +277,17 @@ int twig::curses::run_twig_app(TwigApp *app) {
 				char ch_real = (char) ch;
 
 				decoder_err = encoding::auto_decode_part(
-						terminal_encoding, &decoder_state, &ch_real, 1, &typed_str);
+						terminal_encoding, decoder_state, &ch_real, 1, &typed_str);
 
 				if (decoder_err != encoding::E_OK) {
 					// ignore and reset
+					/*
 					decoder_err = encoding::auto_decode_start(terminal_encoding, &decoder_state);
 					if (decoder_err != encoding::E_OK) {
 						throw std::runtime_error("Couldn't initialize decoder for the terminal");
 					}
+					*/
+					throw std::runtime_error("failure!!! " + std::to_string(decoder_err));
 
 				} else {
 					for(auto cp : typed_str) {

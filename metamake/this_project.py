@@ -91,12 +91,13 @@ def get_lib_encoding(makefile, home, bin_dir,
     for name in [
             "encoding",
             "utf8",
-            "ucs2",
+            "utf16",
+            "utf32",
            ]:
         lib.add_source_file(os.path.join(home, "src", f"{name}.cpp"))
 
     for name in [
-            "encodings"]:
+            "utf"]:
         lib.add_cxxtest_suite(os.path.join(home, "test", f"test_{name}.hpp"))
 
     return lib

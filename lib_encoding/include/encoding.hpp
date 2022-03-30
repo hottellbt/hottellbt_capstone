@@ -23,35 +23,35 @@ namespace encoding {
 	constexpr ErrorCode E_GROUP = 5;    // malformed group of bytes (or surrogate pair)
 	constexpr ErrorCode E_CPOOB = 6;    // codepoint out of bounds (i.e. above the maximum codepoint value)
 
-	ErrorCode ucs2_decode_start  (void** state, bool little_endian) noexcept;
 	ErrorCode utf8_decode_start  (void** state)                     noexcept;
 	ErrorCode utf16_decode_start (void** state, bool little_endian) noexcept;
 	ErrorCode utf32_decode_start (void** state, bool little_endian) noexcept;
 
-	ErrorCode ucs2_decode_part  (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
 	ErrorCode utf8_decode_part  (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
 	ErrorCode utf16_decode_part (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
 	ErrorCode utf32_decode_part (void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept;
 
 	// the end functions do not call free on the void*, which might still be the caller's responsibility
-	ErrorCode ucs2_decode_end  (void* state) noexcept;
 	ErrorCode utf8_decode_end  (void* state) noexcept;
 	ErrorCode utf16_decode_end (void* state) noexcept;
 	ErrorCode utf32_decode_end (void* state) noexcept;
 
-	ErrorCode ucs2_encode  (const Unicode::string_t* ustr, std::string* estr) noexcept;
 	ErrorCode utf8_encode  (const Unicode::string_t* ustr, std::string* estr) noexcept;
 	ErrorCode utf16_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
 	ErrorCode utf32_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
 
 	enum class Encoding {
-		UCS2LE,
-		UCS2BE,
 		UTF8,
 		UTF16LE,
 		UTF16BE,
 		UTF32LE,
 		UTF32BE,
+	};
+
+	enum class Endian {
+		BIG,
+		LITTLE,
+		CHECK_BOM,
 	};
 
 	const char* to_string(const Encoding e);
@@ -60,8 +60,6 @@ namespace encoding {
 		using X = encoding::Encoding;
 		switch (e) {
 			case X::UTF8:    return utf8_decode_start (state);
-			case X::UCS2LE:  return ucs2_decode_start (state, true);
-			case X::UCS2BE:  return ucs2_decode_start (state, false);
 			case X::UTF16LE: return utf16_decode_start(state, true);
 			case X::UTF16BE: return utf16_decode_start(state, false);
 			case X::UTF32LE: return utf32_decode_start(state, true);
@@ -71,32 +69,51 @@ namespace encoding {
 		return E_NEVER;
 	}
 
-	inline ErrorCode auto_decode_part(const Encoding e, void* state, const char* data, size_t data_len, Unicode::string_t* ustr) noexcept {
+	inline ErrorCode auto_decode_part(
+			const Encoding e,
+			void* state,
+			const char* data,
+			size_t data_len,
+			Unicode::string_t* ustr) noexcept {
+
+		assert(state != NULL);
 		using X = encoding::Encoding;
+
 		switch (e) {
-			case X::UTF8:    return utf8_decode_part (state, data, data_len, ustr);
-			case X::UCS2LE:  return ucs2_decode_part (state, data, data_len, ustr);
-			case X::UCS2BE:  return ucs2_decode_part (state, data, data_len, ustr);
-			case X::UTF16LE: return utf16_decode_part(state, data, data_len, ustr);
-			case X::UTF16BE: return utf16_decode_part(state, data, data_len, ustr);
-			case X::UTF32LE: return utf32_decode_part(state, data, data_len, ustr);
-			case X::UTF32BE: return utf32_decode_part(state, data, data_len, ustr);
+			case X::UTF8:
+				return utf8_decode_part (state, data, data_len, ustr);
+
+			case X::UTF16LE:
+			case X::UTF16BE:
+				return utf16_decode_part(state, data, data_len, ustr);
+
+			case X::UTF32LE:
+			case X::UTF32BE:
+				return utf32_decode_part(state, data, data_len, ustr);
 		}
+
 		assert(false);
 		return E_NEVER;
 	}
 
 	inline ErrorCode auto_decode_end(const Encoding e, void* state) noexcept {
+
+		assert(state != NULL);
 		using X = encoding::Encoding;
+
 		switch (e) {
-			case X::UTF8:    return utf8_decode_end (state);
-			case X::UCS2LE:  return ucs2_decode_end (state);
-			case X::UCS2BE:  return ucs2_decode_end (state);
-			case X::UTF16LE: return utf16_decode_end(state);
-			case X::UTF16BE: return utf16_decode_end(state);
-			case X::UTF32LE: return utf32_decode_end(state);
-			case X::UTF32BE: return utf32_decode_end(state);
+			case X::UTF8:
+				return utf8_decode_end (state);
+
+			case X::UTF16LE:
+			case X::UTF16BE:
+				return utf16_decode_end(state);
+
+			case X::UTF32LE:
+			case X::UTF32BE:
+				return utf32_decode_end(state);
 		}
+
 		assert(false);
 		return E_NEVER;
 	}
@@ -110,10 +127,10 @@ namespace encoding {
 			const size_t data_len,
 			Unicode::string_t* ustr) noexcept {
 
-		int status;
+		int status = E_OK;
 		void* state = NULL;
 
-		status = auto_decode_start(e, &state);
+		if (status == E_OK) status = auto_decode_start(e, &state);
 		if (status == E_OK) status = auto_decode_part(e, state, data, data_len, ustr);
 		if (status == E_OK) status = auto_decode_end(e, state);
 
@@ -129,8 +146,6 @@ namespace encoding {
 		using X = encoding::Encoding;
 		switch (e) {
 			case X::UTF8:    return utf8_encode (ustr, estr);
-			case X::UCS2LE:  return ucs2_encode (ustr, estr);
-			case X::UCS2BE:  return ucs2_encode (ustr, estr);
 			case X::UTF16LE: return utf16_encode(ustr, estr);
 			case X::UTF16BE: return utf16_encode(ustr, estr);
 			case X::UTF32LE: return utf32_encode(ustr, estr);

@@ -1,6 +1,8 @@
 #include <string>
 
 #include <cstdint>
+#include <cassert>
+#include <cstdlib>
 
 #include "unicode.hpp"
 #include "encoding.hpp"
@@ -17,21 +19,35 @@ struct utf8_state {
 
 encoding::ErrorCode encoding::utf8_decode_start(void** state_ptr) noexcept {
 
-	utf8_state* state = (utf8_state*) realloc(*state_ptr, sizeof(utf8_state));
-	*state_ptr = state;
-	if (state == NULL) return encoding::E_MEMORY;
+	assert(state_ptr != NULL);
 
-	// codepoint is left undefined
+	*state_ptr = realloc(*state_ptr, sizeof(utf8_state));
+	if (*state_ptr == NULL) return encoding::E_MEMORY;
+
+	utf8_state* state = (utf8_state*) *state_ptr;
+
 	state->codepoint_pos = 0;
-	state->codepoint_len = 0;
-
+	
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::utf8_decode_part(void* state_ptr, const char *bytes, const size_t bytes_len, Unicode::string_t* ustr) noexcept {
+encoding::ErrorCode encoding::utf8_decode_part(
+		void* state_ptr,
+		const char *bytes,
+		const size_t bytes_len,
+		Unicode::string_t* ustr) noexcept {
+
+	assert(state_ptr != NULL);
+	assert(bytes != NULL);
+	assert(ustr != NULL);
+
 	utf8_state* state = (utf8_state*) state_ptr;
 
-	for (uint i = 0; i < bytes_len; i++) {
+	// helps guard against unassigned values
+	assert(state->codepoint_pos < 5);
+	assert(state->codepoint_len < 5);
+
+	for (size_t i = 0; i < bytes_len; i++) {
 		char b = bytes[i];
 
 		if (state->codepoint_pos == 0) {
@@ -79,14 +95,23 @@ encoding::ErrorCode encoding::utf8_decode_part(void* state_ptr, const char *byte
 	return encoding::E_OK;
 }
 
+encoding::ErrorCode encoding::utf8_decode_end(void* state_ptr) noexcept {
+	utf8_state* state = (utf8_state*) state_ptr;
+	if (state->codepoint_pos != 0) return encoding::E_BADEND;
+	return encoding::E_OK;
+}
+
 encoding::ErrorCode encoding::utf8_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+
+	assert(ustr != NULL);
+	assert(estr != NULL);
 
 	for (size_t i = 0; i < ustr->size(); i++) {
 
 		Unicode::codepoint_t cp = (*ustr)[i];
 
 		if (cp <= 0x00007F) {
-			estr += (char) cp;
+			*estr += (char) cp;
 
 		} else if (cp <= 0x0007FF) {
 			*estr += 0xC0 | (0x1F & ((char) (cp >> 6)));

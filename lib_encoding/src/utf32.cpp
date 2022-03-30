@@ -6,15 +6,15 @@
 #include "unicode.hpp"
 #include "encoding.hpp"
 
-struct ucs2_state {
+struct utf32_state {
 	bool little_endian;
 	uint_fast8_t num_bytes;
-	uint8_t bytes[2];
+	uint8_t bytes[4];
 };
 
-encoding::ErrorCode encoding::ucs2_decode_start(void** state_ptr, bool little_endian) noexcept {
+encoding::ErrorCode encoding::utf32_decode_start(void** state_ptr, bool little_endian) noexcept {
 
-	ucs2_state* state = (ucs2_state*) realloc(*state_ptr, sizeof(ucs2_state));
+	utf32_state* state = (utf32_state*) realloc(*state_ptr, sizeof(utf32_state));
 	*state_ptr = state;
 	if (state == NULL) return encoding::E_MEMORY;
 
@@ -25,23 +25,32 @@ encoding::ErrorCode encoding::ucs2_decode_start(void** state_ptr, bool little_en
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::ucs2_decode_part(
+encoding::ErrorCode encoding::utf32_decode_part(
 		void* state_ptr,
 		const char *input,
 		const size_t input_len,
 		Unicode::string_t* ustr) noexcept {
 
-	ucs2_state* state = (ucs2_state*) state_ptr;
+	assert(state_ptr != NULL);
+	assert(input != NULL);
+	assert(ustr != NULL);
+
+	utf32_state* state = (utf32_state*) state_ptr;
 
 	for (size_t input_pos = 0; input_pos < input_len; input_pos++) {
 
 		state->bytes[state->num_bytes++] = input[input_pos];
 
-		if (state->num_bytes == 2) {
+		if (state->num_bytes == 4) {
 
-			const uint8_t b1 = state->bytes[0];
-			const uint8_t b2 = state->bytes[1];
-			Unicode::codepoint_t cp = (b1 << 8) | b2;
+			uint8_t b1, b2, b3, b4;
+
+			b1 = state->bytes[0];
+			b2 = state->bytes[1];
+			b3 = state->bytes[2];
+			b4 = state->bytes[3];
+
+			Unicode::codepoint_t cp = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
 			ustr->push_back(cp);
 
 			state->num_bytes = 0;
@@ -52,13 +61,13 @@ encoding::ErrorCode encoding::ucs2_decode_part(
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode ucs2_decode_end(void* state_ptr) noexcept {
-	ucs2_state* state = (ucs2_state*) state_ptr;
+encoding::ErrorCode encoding::utf32_decode_end(void* state_ptr) noexcept {
+	utf32_state* state = (utf32_state*) state_ptr;
 	if (state->num_bytes != 0) return encoding::E_BADEND;
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::ucs2_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+encoding::ErrorCode encoding::utf32_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
 
 	for (size_t i = 0; i < ustr->size(); i++) {
 		Unicode::codepoint_t cp = (*ustr)[i];
