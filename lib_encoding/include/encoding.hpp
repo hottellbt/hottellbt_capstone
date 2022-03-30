@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstdlib>
 
+#include <vector>
 #include <stdexcept>
 #include <string>
 
@@ -36,9 +37,9 @@ namespace encoding {
 	ErrorCode utf16_decode_end (void* state) noexcept;
 	ErrorCode utf32_decode_end (void* state) noexcept;
 
-	ErrorCode utf8_encode  (const Unicode::string_t* ustr, std::string* estr) noexcept;
-	ErrorCode utf16_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
-	ErrorCode utf32_encode (const Unicode::string_t* ustr, std::string* estr) noexcept;
+	ErrorCode utf8_encode  (const Unicode::string_t* ustr, std::vector<char>* estr) noexcept;
+	ErrorCode utf16_encode (const Unicode::string_t* ustr, std::vector<char>* estr, bool little_endian) noexcept;
+	ErrorCode utf32_encode (const Unicode::string_t* ustr, std::vector<char>* estr, bool little_endian) noexcept;
 
 	enum class Encoding {
 		UTF8,
@@ -142,14 +143,14 @@ namespace encoding {
 	inline ErrorCode auto_encode(
 			const Encoding e,
 			const Unicode::string_t* ustr,
-			std::string* estr) noexcept {
+			std::vector<char>* estr) noexcept {
 		using X = encoding::Encoding;
 		switch (e) {
 			case X::UTF8:    return utf8_encode (ustr, estr);
-			case X::UTF16LE: return utf16_encode(ustr, estr);
-			case X::UTF16BE: return utf16_encode(ustr, estr);
-			case X::UTF32LE: return utf32_encode(ustr, estr);
-			case X::UTF32BE: return utf32_encode(ustr, estr);
+			case X::UTF16LE: return utf16_encode(ustr, estr, true);
+			case X::UTF16BE: return utf16_encode(ustr, estr, false);
+			case X::UTF32LE: return utf32_encode(ustr, estr, true);
+			case X::UTF32BE: return utf32_encode(ustr, estr, false);
 		}
 		assert(false);
 		return E_NEVER;
@@ -173,11 +174,11 @@ namespace encoding {
 		return ret;
 	}
 
-	inline std::string auto_encode_or_throw(
+	inline std::vector<char> auto_encode_or_throw(
 			const Encoding e,
 			const Unicode::string_t* ustr) {
 
-		std::string ret;
+		std::vector<char> ret;
 		int status = auto_encode(e, ustr, &ret);
 		if (status != E_OK) {
 			throw EncodingError((std::string) "Failed to encode " + to_string(e) + ", error code " + std::to_string(status));

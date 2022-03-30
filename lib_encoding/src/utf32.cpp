@@ -45,10 +45,17 @@ encoding::ErrorCode encoding::utf32_decode_part(
 
 			uint8_t b1, b2, b3, b4;
 
-			b1 = state->bytes[0];
-			b2 = state->bytes[1];
-			b3 = state->bytes[2];
-			b4 = state->bytes[3];
+			if (state->little_endian) {
+				b1 = state->bytes[3];
+				b2 = state->bytes[2];
+				b3 = state->bytes[1];
+				b4 = state->bytes[0];
+			} else {
+				b1 = state->bytes[0];
+				b2 = state->bytes[1];
+				b3 = state->bytes[2];
+				b4 = state->bytes[3];
+			}
 
 			Unicode::codepoint_t cp = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
 			ustr->push_back(cp);
@@ -67,17 +74,22 @@ encoding::ErrorCode encoding::utf32_decode_end(void* state_ptr) noexcept {
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::utf32_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+encoding::ErrorCode encoding::utf32_encode(const Unicode::string_t* ustr, std::vector<char>* estr, bool little_endian) noexcept {
 
 	for (size_t i = 0; i < ustr->size(); i++) {
 		Unicode::codepoint_t cp = (*ustr)[i];
 
-		if (cp > 0xFFFF) {
-			return encoding::E_CANTREP;
+		if (little_endian) {
+			estr->push_back((cp >> 24) & 0xFF);
+			estr->push_back((cp >> 16) & 0xFF);
+			estr->push_back((cp >> 8 ) & 0xFF);
+			estr->push_back((cp      ) & 0xFF);
+		} else {
+			estr->push_back((cp      ) & 0xFF);
+			estr->push_back((cp >> 8 ) & 0xFF);
+			estr->push_back((cp >> 16) & 0xFF);
+			estr->push_back((cp >> 24) & 0xFF);
 		}
-
-		estr->push_back((cp >> 8));
-		estr->push_back((cp & 0xFF));
 	}
 
 	return encoding::E_OK;

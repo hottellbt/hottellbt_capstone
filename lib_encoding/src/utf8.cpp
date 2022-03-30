@@ -45,7 +45,7 @@ encoding::ErrorCode encoding::utf8_decode_part(
 
 	// helps guard against unassigned values
 	assert(state->codepoint_pos < 5);
-	assert(state->codepoint_len < 5);
+	// codepoint_len may be unassigned initially
 
 	for (size_t i = 0; i < bytes_len; i++) {
 		char b = bytes[i];
@@ -101,7 +101,7 @@ encoding::ErrorCode encoding::utf8_decode_end(void* state_ptr) noexcept {
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::utf8_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+encoding::ErrorCode encoding::utf8_encode(const Unicode::string_t* ustr, std::vector<char>* estr) noexcept {
 
 	assert(ustr != NULL);
 	assert(estr != NULL);
@@ -111,22 +111,22 @@ encoding::ErrorCode encoding::utf8_encode(const Unicode::string_t* ustr, std::st
 		Unicode::codepoint_t cp = (*ustr)[i];
 
 		if (cp <= 0x00007F) {
-			*estr += (char) cp;
+			estr->push_back((char) cp);
 
 		} else if (cp <= 0x0007FF) {
-			*estr += 0xC0 | (0x1F & ((char) (cp >> 6)));
-			*estr += 0x80 | (0x3F & ((char) cp));
+			estr->push_back(0xC0 | (0x1F & ((char) (cp >> 6))));
+			estr->push_back(0x80 | (0x3F & ((char) cp)));
 
 		} else if (cp <= 0x00FFFF) {
-			*estr += 0xE0 | (0x0F & ((char) (cp >> 12)));
-			*estr += 0x80 | (0x3F & ((char) (cp >> 6)));
-			*estr += 0x80 | (0x3F & ((char) cp));
+			estr->push_back(0xE0 | (0x0F & ((char) (cp >> 12))));
+			estr->push_back(0x80 | (0x3F & ((char) (cp >> 6))));
+			estr->push_back(0x80 | (0x3F & ((char) cp)));
 
 		} else if (cp <= 0x10FFFF) {
-			*estr += 0xF0 | (0x07 & ((char) (cp >> 18)));
-			*estr += 0x80 | (0x3F & ((char) (cp >> 12)));
-			*estr += 0x80 | (0x3F & ((char) (cp >> 6)));
-			*estr += 0x80 | (0x3F & ((char) cp));
+			estr->push_back(0xF0 | (0x07 & ((char) (cp >> 18))));
+			estr->push_back(0x80 | (0x3F & ((char) (cp >> 12))));
+			estr->push_back(0x80 | (0x3F & ((char) (cp >> 6))));
+			estr->push_back(0x80 | (0x3F & ((char) cp)));
 
 		} else {
 			return encoding::E_CPOOB;

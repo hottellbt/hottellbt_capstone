@@ -62,6 +62,12 @@ namespace twig::widget {
 				add_str_raw(str.c_str(), str.size());
 			}
 
+			inline void add_str_raw(const std::vector<char> v) {
+				for (size_t i = 0; i < v.size(); i++) {
+					add_ch(v[i]);
+				}
+			}
+
 			inline void add_unicode_str(const Unicode::string_t& str) {
 				add_str_raw(encoding::auto_encode_or_throw(encoding::Encoding::UTF8, &str));
 			}

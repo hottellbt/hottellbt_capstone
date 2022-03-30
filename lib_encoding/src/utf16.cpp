@@ -52,9 +52,17 @@ encoding::ErrorCode encoding::utf16_decode_part(
 		if (state->num_bytes == 2) {
 			state->num_bytes = 0;
 
-			const uint8_t b1 = state->bytes[0];
-			const uint8_t b2 = state->bytes[1];
-			const uint16_t cp = (b1 << 8) | b2;
+			uint8_t b1, b2;
+			uint16_t cp;
+
+			b1 = state->bytes[0];
+			b2 = state->bytes[1];
+
+			if (state->little_endian) {
+				cp = (b1 << 8) | b2;
+			} else {
+				cp = (b2 << 8) | b1;
+			}
 
 			if (state->check_bom) {
 				state->check_bom = false;
@@ -79,6 +87,8 @@ encoding::ErrorCode encoding::utf16_decode_part(
 					state->prior_surrogate = cp;
 				}
 				continue;
+			} else if (state->had_prior_surrogate) {
+				return E_GROUP;
 			}
 
 			ustr->push_back(cp);
@@ -92,10 +102,11 @@ encoding::ErrorCode encoding::utf16_decode_part(
 encoding::ErrorCode encoding::utf16_decode_end(void* state_ptr) noexcept {
 	utf16_state* state = (utf16_state*) state_ptr;
 	if (state->num_bytes != 0) return encoding::E_BADEND;
+	if (state->had_prior_surrogate) return encoding::E_GROUP;
 	return encoding::E_OK;
 }
 
-encoding::ErrorCode encoding::utf16_encode(const Unicode::string_t* ustr, std::string* estr) noexcept {
+encoding::ErrorCode encoding::utf16_encode(const Unicode::string_t* ustr, std::vector<char>* estr, bool little_endian) noexcept {
 
 	for (size_t i = 0; i < ustr->size(); i++) {
 		Unicode::codepoint_t cp = (*ustr)[i];
@@ -104,8 +115,13 @@ encoding::ErrorCode encoding::utf16_encode(const Unicode::string_t* ustr, std::s
 			return encoding::E_CANTREP;
 		}
 
-		estr->push_back((cp >> 8));
-		estr->push_back((cp & 0xFF));
+		if (little_endian) {
+			estr->push_back((cp >> 8) & 0xFF);
+			estr->push_back((cp     ) & 0xFF);
+		} else {
+			estr->push_back((cp     ) & 0xFF);
+			estr->push_back((cp >> 8) & 0xFF);
+		}
 	}
 
 	return encoding::E_OK;

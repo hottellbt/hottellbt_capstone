@@ -18,6 +18,36 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			encoding::Encoding::UTF32BE,
 		};
 
+		std::string bytes2str(const char* s, const size_t s_len) {
+			std::string ret;
+			for (size_t i = 0; i < s_len; i++) {
+				ret += std::to_string((int) (s[i]));
+				ret += " ";
+			}
+			return ret;
+		}
+
+		std::string unistr(const Unicode::string_t& s) {
+			std::string ret;
+			for (auto c : s) {
+				ret += Unicode::to_string(c);
+			}
+			return ret;
+		}
+
+		bool str_eq(
+				const char* s1,
+				const size_t s1_len,
+				const char* s2,
+				const size_t s2_len) {
+
+			if (s1_len != s2_len) return false;
+			for (size_t i = 0; i < s1_len; i++) {
+				if (s1[i] != s2[i]) return false;
+			}
+			return true;
+		}
+
 		/*
 		   Tests that...
 		   (1) The given bytes are decoded to a 32 bit string without error
@@ -35,14 +65,33 @@ class UTFTestSuite : public CxxTest::TestSuite {
 
 			if (decoded != expected) {
 				TS_FAIL((std::string) "decoded data did not match expectations for "
-						+ encoding::to_string(e));
+						+ encoding::to_string(e)
+						+ ". expected = "
+						+ unistr(expected)
+						+ " , decoded = "
+						+ unistr(decoded));
 			}
 
-			const std::string actual = encoding::auto_encode_or_throw(e, &decoded);
+			const std::vector<char> actual = encoding::auto_encode_or_throw(e, &decoded);
 
-			if (input != actual) {
-				TS_FAIL((std::string) "re-encoded data did not match initial data for" 
-						+ encoding::to_string(e));
+			size_t actual_str_len = actual.size();
+			char* actual_str = (char*) malloc(sizeof(char) * actual_str_len);
+
+			for (size_t i = 0; i < actual_str_len; i++) {
+				actual_str[i] = actual[i];
+			}
+
+			bool eq = str_eq(input, input_size, actual_str, actual_str_len);
+
+			free(actual_str);
+
+			if (!eq) {
+				TS_FAIL((std::string) "re-encoded data did not match initial data for " 
+						+ encoding::to_string(e)
+						+ ". input = "
+						+ bytes2str(input, input_size)
+						+ " , encoded = "
+						+ bytes2str(actual_str, actual_str_len));
 			}
 		}
 
@@ -66,29 +115,18 @@ class UTFTestSuite : public CxxTest::TestSuite {
 
 		void test_utfs() {
 			utfs_test("", 0, "", "", 0, "", "", 0, {});
+			utfs_test("a", 1, "\0a", "a\0", 2, "\0\0\0a", "a\0\0\0", 4, {'a'});
+			utfs_test("b", 1, "\0b", "b\0", 2, "\0\0\0b", "b\0\0\0", 4, {'b'});
+
+			utfs_test(
+					"ab", 2,
+					"\0a\0b", "a\0b\0", 4,
+					"\0\0\0a\0\0\0b", "a\0\0\0b\0\0\0", 8,
+					{'a', 'b'});
 		}
 
 		/*
-		void disabled_test_ascii(const encoding::Encoding e) {
-			for (uint8_t i = 1; i < 128; i++) {
-				char s[2];
-				s[0] = i;
-				s[1] = 0;
-				smoke_test(e, s, 1);
-			}
-
-			smoke_test(e, "Lorem ipsum dolor sit amet,");
-
-			smoke_test(e, "0");
-			smoke_test(e, "A");
-			smoke_test(e, "$");
-			smoke_test(e, "$A0$$abc019");
-		}
-
-		void disabled_test_utf8(void) {
-			const auto e = encoding::Encoding::UTF8;
-
-			test_ascii(e);
+			please re-add these tests
 
 			smoke_test(e, "◍◍");
 
@@ -108,7 +146,6 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			smoke_test(e, "🤠🪶🍭");
 
 			smoke_test(e, "🍭A$🪶£€0ह한1𐍈b🤠");
-		}
 		*/
 };
 
