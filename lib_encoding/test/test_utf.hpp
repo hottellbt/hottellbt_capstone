@@ -46,27 +46,26 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			}
 		}
 
-		void consistency_test(encoding::Encoding e, const std::string& data, const Unicode::string_t& result) {
-			consistency_test(e, data.c_str(), data.size(), result);
-		}
-
 		void utfs_test(
-				const std::string& utf8,
-				const std::string& utf16le,
-				const std::string& utf16be,
-				const std::string& utf32le,
-				const std::string& utf32be,
+				const char* utf8,
+				const size_t utf8_len,
+				const char* utf16le,
+				const char* utf16be,
+				const size_t utf16_len,
+				const char* utf32le,
+				const char* utf32be,
+				const size_t utf32_len,
 				const Unicode::string_t& result) {
 
-			consistency_test(encoding::Encoding::UTF8, utf8, result);
-			consistency_test(encoding::Encoding::UTF16LE, utf16le, result);
-			consistency_test(encoding::Encoding::UTF16BE, utf16be, result);
-			consistency_test(encoding::Encoding::UTF32LE, utf32le, result);
-			consistency_test(encoding::Encoding::UTF32BE, utf32be, result);
+			consistency_test(encoding::Encoding::UTF8,    utf8,    utf8_len,  result);
+			consistency_test(encoding::Encoding::UTF16LE, utf16le, utf16_len, result);
+			consistency_test(encoding::Encoding::UTF16BE, utf16be, utf16_len, result);
+			consistency_test(encoding::Encoding::UTF32LE, utf32le, utf32_len, result);
+			consistency_test(encoding::Encoding::UTF32BE, utf32be, utf32_len, result);
 		}
 
 		void test_utfs() {
-			utfs_test("", "", "", "", "", {});
+			utfs_test("", 0, "", "", 0, "", "", 0, {});
 		}
 
 		/*
