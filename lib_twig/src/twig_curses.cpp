@@ -16,6 +16,8 @@ WINDOW* stdscr;
 void twig::curses::init() {
 	if (in_app_mode) return;
 
+	setlocale(LC_ALL, "");
+
 	stdscr = initscr();
 
 	keypad(stdscr, true);
