@@ -64,11 +64,11 @@ encoding::ErrorCode encoding::utf32_decode_part(
 
 			if (state->check_bom) {
 				state->check_bom = false;
-				if (cp == 0xFFFE) {
+				if (cp == 0xFFFE0000) {
 					state->little_endian = !state->little_endian;
 					continue;
 				}
-				if (cp == 0xFEFF) {
+				if (cp == 0x0000FEFF) {
 					// current endianness is correct
 					continue;
 				}
