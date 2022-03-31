@@ -23,6 +23,7 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			std::string ret;
 			for (auto c : s) {
 				ret += Unicode::to_string(c);
+				ret += " ";
 			}
 			return ret;
 		}
@@ -195,6 +196,57 @@ class UTFTestSuite : public CxxTest::TestSuite {
 					{0x39, 0x09, 0x00, 0x00},
 					{0x00, 0x00, 0x09, 0x39},
 					{ 0x0939 });
+		}
+
+		void do_bom_test(
+				encoding::Encoding e,
+				const char* input,
+				const size_t input_size,
+				const Unicode::string_t& expected) {
+
+			const Unicode::string_t decoded = encoding::auto_decode_or_throw(e, input, input_size);
+
+			if (decoded != expected) {
+				TS_FAIL((std::string) "decoded data did not match expectations for "
+						+ encoding::to_string(e)
+						+ ". expected = "
+						+ unistr(expected)
+						+ " , decoded = "
+						+ unistr(decoded));
+			}
+		}
+
+		void do_bom_tests(
+				const std::vector<unsigned char>& utf16lev,
+				const std::vector<unsigned char>& utf16bev,
+				const std::vector<unsigned char>& utf32lev,
+				const std::vector<unsigned char>& utf32bev,
+				const Unicode::string_t& expected) {
+
+			char* utf16le = create_char_ptr(utf16lev);
+			char* utf16be = create_char_ptr(utf16bev);
+			char* utf32le = create_char_ptr(utf32lev);
+			char* utf32be = create_char_ptr(utf32bev);
+
+			do_bom_test(encoding::Encoding::UTF16LE, utf16le, utf16lev.size(), expected);
+			do_bom_test(encoding::Encoding::UTF16BE, utf16be, utf16bev.size(), expected);
+			do_bom_test(encoding::Encoding::UTF32LE, utf32le, utf32lev.size(), expected);
+			do_bom_test(encoding::Encoding::UTF32BE, utf32be, utf32bev.size(), expected);
+
+			free(utf16le);
+			free(utf16be);
+			free(utf32le);
+			free(utf32be);
+		}
+
+		void test_bom() {
+			// ignore BOM if it aligns with what we expect
+			do_bom_tests(
+					{0xFF, 0xFE, 0x24, 0x00},
+					{0xFE, 0xFF, 0x00, 0x24},
+					{0xFF, 0xFE, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00},
+					{0x00, 0x00, 0xFE, 0xFF, 0x00, 0x00, 0x00, 0x24},
+					{ '$' });
 		}
 
 		/*

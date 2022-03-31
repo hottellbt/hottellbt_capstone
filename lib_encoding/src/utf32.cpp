@@ -7,6 +7,7 @@
 #include "encoding.hpp"
 
 struct utf32_state {
+	bool check_bom;
 	bool little_endian;
 	uint_fast8_t num_bytes;
 	uint8_t bytes[4];
@@ -18,6 +19,7 @@ encoding::ErrorCode encoding::utf32_decode_start(void** state_ptr, bool little_e
 	*state_ptr = state;
 	if (state == NULL) return encoding::E_MEMORY;
 
+	state->check_bom = true;
 	state->little_endian = little_endian;
 	state->num_bytes = 0;
 	// saved_bytes are left undefined
@@ -42,6 +44,7 @@ encoding::ErrorCode encoding::utf32_decode_part(
 		state->bytes[state->num_bytes++] = input[input_pos];
 
 		if (state->num_bytes == 4) {
+			state->num_bytes = 0;
 
 			uint8_t b1, b2, b3, b4;
 
@@ -58,9 +61,21 @@ encoding::ErrorCode encoding::utf32_decode_part(
 			}
 
 			Unicode::codepoint_t cp = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
-			ustr->push_back(cp);
 
-			state->num_bytes = 0;
+			if (state->check_bom) {
+				state->check_bom = false;
+				if (cp == 0xFFFE) {
+					state->little_endian = !state->little_endian;
+					continue;
+				}
+				if (cp == 0xFEFF) {
+					// current endianness is correct
+					continue;
+				}
+				// otherwise: there was no BOM, so let's hope we were correct anyways :)
+			}
+
+			ustr->push_back(cp);
 		}
 
 	}
