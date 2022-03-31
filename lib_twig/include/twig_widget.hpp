@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <vector>
 
 #include <cassert>
 
@@ -27,11 +28,10 @@ namespace twig::widget {
 		public:
 			void* magic;
 
-			Graphics() : Graphics(nullptr) {}
-			Graphics(void* magic) : magic(magic) {}
-			~Graphics();
+			Graphics() : magic(nullptr) {}
+			Graphics(void* magic) : magic(magic) { assert(magic != nullptr); }
+			~Graphics() { delmagic(); }
 
-			WDim get_size(void);
 			WPoint get_position(void);
 
 			void clear_fast(void);
@@ -135,7 +135,9 @@ namespace twig::widget {
 				add_str_utf8(str);
 			}
 
-			void when_owner_resized(const WDim& new_size);
+			void resize(const WDim& new_size);
+
+			void set_no_parent(void);
 
 			inline unsigned short get_str_width(Unicode::codepoint_t cp) {
 				using X = Unicode::EastAsianWidth;
@@ -161,34 +163,18 @@ namespace twig::widget {
 			inline unsigned short get_str_width(Unicode::string_t s) {
 				return get_str_width(s, 0, s.size());
 			}
-	};
 
-	inline std::unique_ptr<Graphics> request_graphics() {
-		return std::unique_ptr<Graphics>(new Graphics());
-	}
+		private:
+			void delmagic(void);
+	};
 
 	class Widget {
 		public:
-			Widget() {
-				if (is_graphical()) {
-					graphics = request_graphics();
-				} else {
-					graphics = nullptr;
-				}
-			}
+			Widget() {}
 
 			virtual ~Widget() {}
 
-			virtual void repaint() = 0;
-
-			bool is_graphical() const noexcept {
-				return true;
-			}
-
-			std::unique_ptr<Graphics>& get_graphics(void) {
-				assert(is_graphical());
-				return graphics;
-			}
+			virtual void paint(Graphics& g) = 0;
 
 			WPoint& get_position(void) { return position; }
 
@@ -197,21 +183,29 @@ namespace twig::widget {
 			void set_position(const WPoint& x) { position = x; }
 
 			void set_size(const WDim& new_size) {
-
 				assert(new_size.width > 0 && new_size.height > 0);
 
 				if (size != new_size) {
 					size = new_size;
-					if (is_graphical()) {
-						graphics->when_owner_resized(new_size);
-					}
+					this->when_resized(new_size);
 				}
 			}
 
+			void set_visible(bool visible) {
+				this->visible = visible;
+			}
+
+			bool is_visible(void) const {
+				return this->visible;
+			}
+
+		protected:
+			virtual void when_resized(const WDim& new_size) {}
+
 		private:
+			bool visible = true;
 			WPoint position {0, 0};
 			WDim size {0, 0};
-			std::unique_ptr<Graphics> graphics = nullptr;
 	};
 }
 

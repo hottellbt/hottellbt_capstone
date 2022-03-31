@@ -11,6 +11,7 @@
 #include "todo.hpp"
 
 #include "twig_app.hpp"
+#include "twig_widget_container.hpp"
 #include "twig_widget_list.hpp"
 #include "twig_os.hpp"
 
@@ -18,6 +19,8 @@ using twig::widget::Widget;
 using twig::widget::Graphics;
 using twig::widget::WRect;
 using twig::widget::WDim;
+using twig::widget::WInt;
+using twig::widget::WPoint;
 
 inline Unicode::string_t escape(const Unicode::string_t s) {
 	Unicode::string_t ret;
@@ -35,6 +38,47 @@ inline Unicode::string_t escape(const Unicode::string_t s) {
 
 	return ret;
 }
+
+class DesktopWidget : public Widget {
+	public:
+		DesktopWidget() {}
+		~DesktopWidget() {}
+
+		void paint(Graphics& g) override {
+			g.clear_fast();
+
+			if (left_widget != nullptr) {
+				left_widget->paint(g);
+			}
+
+			if (right_widget != nullptr) {
+				right_widget->paint(g);
+			}
+		}
+
+		void when_resized(const WDim& new_size) override {
+			WInt half_width = (WInt) (new_size.width / 2);
+
+			if (left_widget != nullptr) {
+				left_widget->set_position({0, 0});
+				left_widget->set_size({
+					half_width,
+					new_size.height
+				});
+			}
+
+			if (right_widget != nullptr) {
+				right_widget->set_position({half_width, 0});
+				right_widget->set_size({
+					(WInt) (new_size.width-half_width),
+					new_size.height
+				});
+			}
+		}
+
+		Widget* left_widget = nullptr;
+		Widget* right_widget = nullptr;
+};
 
 class DemoListModel : public twig::widget::ListModel<todo::Item> {
 	public:
@@ -81,7 +125,7 @@ class DemoListPainter : public twig::widget::ListPainter<todo::Item> {
 
 	protected:
 		void draw_row(
-				std::unique_ptr<Graphics>& g,
+				Graphics& g,
 				const WRect& bounds,
 				const todo::Item& value,
 				size_t index,
@@ -89,7 +133,7 @@ class DemoListPainter : public twig::widget::ListPainter<todo::Item> {
 };
 
 void DemoListPainter::draw_row(
-		std::unique_ptr<Graphics>& g,
+		Graphics& g,
 		const WRect& bounds,
 		const todo::Item& value,
 		size_t index,
@@ -100,53 +144,77 @@ void DemoListPainter::draw_row(
 	bool highlight = index == model->get_selection_index();
 
 	if (highlight) { 
-		g->set_standout(true);
-		g->set_bold(true);
+		g.set_standout(true);
+		g.set_bold(true);
 	}
 
 	auto x = bounds.x;
 	auto y = bounds.y;
-	g->mv(x, y);
+	g.mv(x, y);
 
 	if (bounds.width > 6) {
 		bool add_brackets = bounds.width > 8;
 
-		if (add_brackets) g->add_ch('[');
+		if (add_brackets) g.add_ch('[');
 
 		switch (value.status) {
 			case todo::Status::IN_PROGRESS:
-				g->add_ch('~');
+				g.add_ch('~');
 				break;
 			case todo::Status::DONE:
-				g->add_ch('@');
+				g.add_ch('@');
 				break;
 			case todo::Status::CANCELED:
-				g->add_ch('X');
+				g.add_ch('X');
 				break;
 			case todo::Status::NONE:
 			default:
-				g->add_ch(' ');
+				g.add_ch(' ');
 				break;
 		}
-		if (add_brackets) g->add_ch(']');
-		g->add_ch(' ');
+		if (add_brackets) g.add_ch(']');
+		g.add_ch(' ');
 
 		if (add_brackets) x += 4;
 		else x += 2;
 	}
 
-	g->add_unicode_str(value.title);
-	x += g->get_str_width(value.title);
+	g.add_unicode_str(value.title);
+	x += g.get_str_width(value.title);
 
 	for (; x < bounds.width; x++) {
-		g->add_ch(' ');
+		g.add_ch(' ');
 	}
 
 	if (highlight) {
-		g->set_standout(false);
-		g->set_bold(false);
+		g.set_standout(false);
+		g.set_bold(false);
 	}
 }
+
+class DebugWidget : public Widget {
+	private:
+		char c;
+	public:
+		DebugWidget(char c) : c(c) {}
+		~DebugWidget() {}
+
+		void paint(Graphics& g) override {
+			WPoint pos = get_position();
+			WDim size = get_size();
+
+			for (auto y = 0; y < size.height; y++) {
+				g.mv(pos.x, pos.y + y);
+				for (auto x = 0; x < size.width; x++) {
+					g.add_ch(c);
+				}
+			}
+		}
+};
+
+DebugWidget *debug_widget = new DebugWidget('%');
+
+DesktopWidget *desktop = new DesktopWidget();
 
 DemoListModel *list_model = new DemoListModel();
 
@@ -160,11 +228,16 @@ class MyTwigApp : public twig::TwigApp {
 	public:
 		bool is_running() override { return this->running; }
 
-		Widget* get_root_widget() { return list_view; }
+		Widget* get_root_widget() { return desktop; }
 
 		void when_typed(const Unicode::codepoint_t& input) override;
 
 		void when_typed_special(const twig::special_key& key) override;
+
+		void when_starting() override {
+			desktop->left_widget = list_view;
+			desktop->right_widget = debug_widget;
+		}
 
 	private:
 		bool running = true;

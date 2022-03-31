@@ -110,11 +110,10 @@ namespace twig::widget {
 			ListPainter(ListModel<T> *model) : model(model) {}
 			virtual ~ListPainter() {}
 
-			void repaint() override {
-				auto& g = get_graphics();
-				const WDim bounds = g->get_size();
+			void paint(Graphics& g) override {
+				const WDim bounds = this->get_size();
 
-				g->clear_fast();
+				g.clear_fast();
 
 				// for now we assume that every row has a height of 1
 				const unsigned short row_height = 1;
@@ -149,7 +148,7 @@ namespace twig::widget {
 			ListModel<T>* const model;
 
 			virtual void draw_row(
-					std::unique_ptr<Graphics>& g,
+					Graphics& g,
 					const WRect& bounds,
 					const T& value,
 					size_t index,

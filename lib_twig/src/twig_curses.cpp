@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <queue>
 
 #include <cerrno>
 #include <cstring>
@@ -52,26 +53,18 @@ using twig::widget::WPoint;
 
 using twig::color::ColorPair;
 
-Graphics::~Graphics() {
-	if (magic != nullptr && magic != stdscr) {
-		delwin((WINDOW*) magic);
-	}
+void Graphics::delmagic(void) {
+	if (magic != nullptr && magic != stdscr) delwin((WINDOW*) magic);
 }
 
-void Graphics::when_owner_resized(const WDim& new_size) {
-	if (magic == nullptr) {
-		magic = newpad(new_size.height, new_size.width);
-	} else {
-		wresize((WINDOW*) magic, new_size.height, new_size.width);
-	}
-}
-
+/*
 WDim Graphics::get_size(void) {
 	assert(magic != nullptr);
 	WInt y, x;
 	getmaxyx((WINDOW*) magic, y, x);
 	return {x, y};
 }
+*/
 
 WPoint Graphics::get_position(void) {
 	assert(magic != nullptr);
@@ -191,23 +184,19 @@ twig::special_key get_special_key(int curses_key) {
 	}
 }
 
-inline void do_repaint(twig::TwigApp *app) {
+inline void do_repaint(Graphics& g, twig::TwigApp *app) {
 	assert(app != nullptr);
 
 	Widget* root_widget = app->get_root_widget();
-
 	assert(root_widget != nullptr);
-
-	root_widget->repaint();
 
 	WDim root_dim = root_widget->get_size();
 	WPoint root_ul = root_widget->get_position();
 
-	void* magic = root_widget->get_graphics()->magic;
-	assert(magic != nullptr);
+	root_widget->paint(g);
 
 	pnoutrefresh(
-			(WINDOW*) magic,
+			(WINDOW*) g.magic,
 			0,
 			0,
 			root_ul.y,
@@ -261,8 +250,10 @@ int twig::curses::run_twig_app(TwigApp *app) {
 
 		twig::curses::init();
 
+		Graphics g ( stdscr );
+
 		do_resize(app);
-		do_repaint(app);
+		do_repaint(g, app);
 
 		int ch;
 
@@ -304,7 +295,7 @@ int twig::curses::run_twig_app(TwigApp *app) {
 				app->when_typed_special(get_special_key(ch));
 			}
 
-			do_repaint(app);
+			do_repaint(g, app);
 
 		}
 
