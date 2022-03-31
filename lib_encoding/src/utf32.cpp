@@ -46,15 +46,15 @@ encoding::ErrorCode encoding::utf32_decode_part(
 			uint8_t b1, b2, b3, b4;
 
 			if (state->little_endian) {
-				b1 = state->bytes[3];
-				b2 = state->bytes[2];
-				b3 = state->bytes[1];
-				b4 = state->bytes[0];
-			} else {
 				b1 = state->bytes[0];
 				b2 = state->bytes[1];
 				b3 = state->bytes[2];
 				b4 = state->bytes[3];
+			} else {
+				b1 = state->bytes[3];
+				b2 = state->bytes[2];
+				b3 = state->bytes[1];
+				b4 = state->bytes[0];
 			}
 
 			Unicode::codepoint_t cp = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
@@ -80,15 +80,15 @@ encoding::ErrorCode encoding::utf32_encode(const Unicode::string_t* ustr, std::v
 		Unicode::codepoint_t cp = (*ustr)[i];
 
 		if (little_endian) {
-			estr->push_back((cp >> 24) & 0xFF);
-			estr->push_back((cp >> 16) & 0xFF);
-			estr->push_back((cp >> 8 ) & 0xFF);
 			estr->push_back((cp      ) & 0xFF);
+			estr->push_back((cp >> 8 ) & 0xFF);
+			estr->push_back((cp >> 16) & 0xFF);
+			estr->push_back((cp >> 24) & 0xFF);
 		} else {
-			estr->push_back((cp      ) & 0xFF);
-			estr->push_back((cp >> 8 ) & 0xFF);
-			estr->push_back((cp >> 16) & 0xFF);
 			estr->push_back((cp >> 24) & 0xFF);
+			estr->push_back((cp >> 16) & 0xFF);
+			estr->push_back((cp >> 8 ) & 0xFF);
+			estr->push_back((cp      ) & 0xFF);
 		}
 	}
 

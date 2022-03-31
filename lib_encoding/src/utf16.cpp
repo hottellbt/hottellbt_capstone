@@ -55,14 +55,15 @@ encoding::ErrorCode encoding::utf16_decode_part(
 			uint8_t b1, b2;
 			uint16_t cp;
 
-			b1 = state->bytes[0];
-			b2 = state->bytes[1];
-
 			if (state->little_endian) {
-				cp = (b1 << 8) | b2;
+				b1 = state->bytes[1];
+				b2 = state->bytes[0];
 			} else {
-				cp = (b2 << 8) | b1;
+				b1 = state->bytes[0];
+				b2 = state->bytes[1];
 			}
+
+			cp = (b1 << 8) | b2;
 
 			if (state->check_bom) {
 				state->check_bom = false;
@@ -80,14 +81,20 @@ encoding::ErrorCode encoding::utf16_decode_part(
 			if (cp >= 0xD800 && cp <= 0xDFFF) {
 				if (state->had_prior_surrogate) {
 					state->had_prior_surrogate = false;
-					const uint32_t cp_full = (state->prior_surrogate << 16) | cp;
+
+					uint16_t high_surrogate = (state->prior_surrogate - 0xD800) * 0x400;
+					uint16_t low_surrogate = cp - 0xDC00;
+					const uint32_t cp_full = high_surrogate + low_surrogate + 0x10000;
+
 					ustr->push_back(cp_full);
 				} else {
 					state->had_prior_surrogate = true;
 					state->prior_surrogate = cp;
 				}
 				continue;
+
 			} else if (state->had_prior_surrogate) {
+				// had a surrogate pair on the left, but not on the right
 				return E_GROUP;
 			}
 
@@ -112,15 +119,33 @@ encoding::ErrorCode encoding::utf16_encode(const Unicode::string_t* ustr, std::v
 		Unicode::codepoint_t cp = (*ustr)[i];
 
 		if (cp > 0xFFFF) {
-			return encoding::E_CANTREP;
+			// encode as a surrogate pair
+
+			Unicode::codepoint_t sub = cp - 0x10000;
+			uint16_t high = (sub / 0x400) + 0xD800;
+			uint16_t low  = (sub & 0x03FF) + 0xDC00;
+
+			if (little_endian) {
+				estr->push_back((high     ) & 0xFF);
+				estr->push_back((high >> 8) & 0xFF);
+				estr->push_back((low      ) & 0xFF);
+				estr->push_back((low  >> 8) & 0xFF);
+			} else {
+				estr->push_back((high >> 8) & 0xFF);
+				estr->push_back((high     ) & 0xFF);
+				estr->push_back((low  >> 8) & 0xFF);
+				estr->push_back((low      ) & 0xFF);
+			}
+
+			continue;
 		}
 
 		if (little_endian) {
-			estr->push_back((cp >> 8) & 0xFF);
 			estr->push_back((cp     ) & 0xFF);
+			estr->push_back((cp >> 8) & 0xFF);
 		} else {
-			estr->push_back((cp     ) & 0xFF);
 			estr->push_back((cp >> 8) & 0xFF);
+			estr->push_back((cp     ) & 0xFF);
 		}
 	}
 

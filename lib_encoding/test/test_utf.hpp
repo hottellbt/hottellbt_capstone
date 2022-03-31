@@ -10,14 +10,6 @@
 class UTFTestSuite : public CxxTest::TestSuite {
 	public:
 
-		const std::vector<encoding::Encoding> utfs {
-			encoding::Encoding::UTF8,
-			encoding::Encoding::UTF16LE,
-			encoding::Encoding::UTF16BE,
-			encoding::Encoding::UTF32LE,
-			encoding::Encoding::UTF32BE,
-		};
-
 		std::string bytes2str(const char* s, const size_t s_len) {
 			std::string ret;
 			for (size_t i = 0; i < s_len; i++) {
@@ -113,16 +105,96 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			consistency_test(encoding::Encoding::UTF32BE, utf32be, utf32_len, result);
 		}
 
+		char* create_char_ptr(const std::vector<unsigned char>& v) {
+			char* ret = (char*) malloc(sizeof(char) * v.size());
+			if (ret == NULL) throw std::runtime_error("malloc failed!");
+			for (size_t i = 0; i < v.size(); i++) {
+				ret[i] = v[i];
+			}
+			return ret;
+		}
+
+		void utfs_testv(
+				const std::vector<unsigned char>& utf8v,
+				const std::vector<unsigned char>& utf16lev,
+				const std::vector<unsigned char>& utf16bev,
+				const std::vector<unsigned char>& utf32lev,
+				const std::vector<unsigned char>& utf32bev,
+				const Unicode::string_t& result) {
+
+			char* utf8 = create_char_ptr(utf8v);
+			char* utf16le = create_char_ptr(utf16lev);
+			char* utf16be = create_char_ptr(utf16bev);
+			char* utf32le = create_char_ptr(utf32lev);
+			char* utf32be = create_char_ptr(utf32bev);
+
+			size_t utf8_len = utf8v.size();
+			size_t utf16_len = utf16bev.size();
+			size_t utf32_len = utf32bev.size();
+
+			utfs_test(utf8, utf8_len, utf16le, utf16be, utf16_len, utf32le, utf32be, utf32_len, result);
+
+			free(utf8);
+			free(utf16le);
+			free(utf16be);
+			free(utf32le);
+			free(utf32be);
+		}
+
 		void test_utfs() {
 			utfs_test("", 0, "", "", 0, "", "", 0, {});
-			utfs_test("a", 1, "\0a", "a\0", 2, "\0\0\0a", "a\0\0\0", 4, {'a'});
-			utfs_test("b", 1, "\0b", "b\0", 2, "\0\0\0b", "b\0\0\0", 4, {'b'});
+			utfs_test("a", 1, "a\0", "\0a", 2, "a\0\0\0", "\0\0\0a", 4, {'a'});
+			utfs_test("b", 1, "b\0", "\0b", 2, "b\0\0\0", "\0\0\0b", 4, {'b'});
 
 			utfs_test(
 					"ab", 2,
-					"\0a\0b", "a\0b\0", 4,
-					"\0\0\0a\0\0\0b", "a\0\0\0b\0\0\0", 8,
+					"a\0b\0", "\0a\0b", 4,
+					"a\0\0\0b\0\0\0", "\0\0\0a\0\0\0b", 8,
 					{'a', 'b'});
+
+			/*
+			utfs_test(
+					"🪶", 3,
+					"\ud83e\udeb6", 
+					{0x1FAB6});
+					*/
+
+			// emojis
+			// 🤠
+			utfs_testv(
+					{0xF0, 0x9F, 0xA4, 0xA0},
+					{0x3e, 0xd8, 0x20, 0xdd},
+					{0xd8, 0x3e, 0xdd, 0x20},
+					{0x20, 0xf9, 0x01, 0x00},
+					{0x00, 0x01, 0xf9, 0x20},
+					{ 0x1F920 });
+
+			// examples taken from https://en.wikipedia.org/wiki/UTF-8
+			utfs_testv(
+					{ '$' },
+					{0x24, 0x00},
+					{0x00, 0x24},
+					{0x24, 0x00, 0x00, 0x00},
+					{0x00, 0x00, 0x00, 0x24},
+					{ '$' });
+
+			// £
+			utfs_testv(
+					{0xC2, 0xA3},
+					{0xA3, 0x00},
+					{0x00, 0xA3},
+					{0xA3, 0x00, 0x00, 0x00},
+					{0x00, 0x00, 0x00, 0xA3},
+					{ 0x00A3 });
+
+			// ह
+			utfs_testv(
+					{0xE0, 0xA4, 0xB9},
+					{0x39, 0x09},
+					{0x09, 0x39},
+					{0x39, 0x09, 0x00, 0x00},
+					{0x00, 0x00, 0x09, 0x39},
+					{ 0x0939 });
 		}
 
 		/*
@@ -131,8 +203,6 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			smoke_test(e, "◍◍");
 
 			// examples taken from https://en.wikipedia.org/wiki/UTF-8
-			smoke_test(e, "£");
-			smoke_test(e, "ह");
 			smoke_test(e, "€");
 			smoke_test(e, "한");
 			smoke_test(e, "𐍈");
@@ -140,7 +210,6 @@ class UTFTestSuite : public CxxTest::TestSuite {
 			smoke_test(e, "0A$£€0ह한1𐍈b");
 
 			// emojis
-			smoke_test(e, "🤠");
 			smoke_test(e, "🍭");
 			smoke_test(e, "🪶");
 			smoke_test(e, "🤠🪶🍭");
